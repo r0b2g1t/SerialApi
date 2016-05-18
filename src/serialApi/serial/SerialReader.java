@@ -6,7 +6,7 @@ package serialApi.serial;
 
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
-import serialApi.Protocol;
+import serialApi.SerialProtocol;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,8 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SerialReader implements SerialPortEventListener{
 
     private final BufferedReader inputBuffer;
-    private final ConcurrentHashMap<Long, BlockingQueue<Protocol>> responseQueueMap;
-    private final Protocol transferElement;
+    private final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap;
+    private final SerialProtocol transferElement;
 
     /**
      * @param inputStream       InputStream for handling the available data
@@ -28,8 +28,8 @@ public class SerialReader implements SerialPortEventListener{
      *                          (ThreadID;request;response;meta-data;...)
      */
     public SerialReader(InputStream inputStream,
-                        ConcurrentHashMap<Long, BlockingQueue<Protocol>> responseQueueMap,
-                        Protocol transferElement)
+                        ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap,
+                        SerialProtocol transferElement)
     {
         this.inputBuffer = new BufferedReader(new InputStreamReader(inputStream));
         this.responseQueueMap = responseQueueMap;
@@ -46,22 +46,33 @@ public class SerialReader implements SerialPortEventListener{
             if( serialEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE )
             {
                 String response;
-                Protocol responseElement = new Protocol(null, null);
+                SerialProtocol responseElement = new SerialProtocol(null, null);
 
                 response = inputBuffer.readLine();
 
-                transferElement.setResponse(response);
-                System.out.println( "Response element total: "
-                                    + transferElement.getThreadID()
-                                    + ";" + transferElement.getRequest()
-                                    + ";" + transferElement.getResponse());
+                if(response.equals("NOTE")){
+                    responseElement.flush();
+                    responseElement.setThreadID(Long.valueOf("0"));
+                    responseElement.setResponse(response);
+                    responseElement.setSyncFlag(false);
+                    responseQueueMap.get(Long.valueOf("0")).add(responseElement);
+                } else {
 
-                responseElement.setThreadID(transferElement.getThreadID());
-                responseElement.setRequest(transferElement.getRequest());
-                responseElement.setResponse(transferElement.getResponse());
+                    transferElement.setResponse(response);
+                    System.out.println("Response element total: "
+                            + transferElement.getThreadID()
+                            + ";" + transferElement.getRequest()
+                            + ";" + transferElement.getResponse()
+                            + ";" + transferElement.getSyncFlag());
 
-                responseQueueMap.get(transferElement.getThreadID()).add(responseElement);
-                transferElement.flush();
+                    responseElement.setThreadID(transferElement.getThreadID());
+                    responseElement.setRequest(transferElement.getRequest());
+                    responseElement.setResponse(transferElement.getResponse());
+                    responseElement.setSyncFlag(transferElement.getSyncFlag());
+
+                    responseQueueMap.get(transferElement.getThreadID()).add(responseElement);
+                    transferElement.flush();
+                }
             }
         }catch( IOException e ){
             e.printStackTrace();

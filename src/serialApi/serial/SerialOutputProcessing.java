@@ -4,7 +4,7 @@ package serialApi.serial;
  * Created by robert on 21.04.16.
  */
 
-import serialApi.Protocol;
+import serialApi.SerialProtocol;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,9 +12,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class SerialOutputProcessing implements Runnable{
 
-    private final LinkedBlockingQueue<Protocol> SERIAL_OUTPUT_QUEUE;
+    private final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE;
     private final OutputStream SERIAL_OUT;
-    private final Protocol transferElement;
+    private final SerialProtocol transferElement;
 
     /**
      * @param SERIAL_OUTPUT_QUEUE   request queue
@@ -22,9 +22,9 @@ public class SerialOutputProcessing implements Runnable{
      * @param transferElement       shared object witch carries the information of the last written request to
      *                              the device, for the transmission to the SerialReader-class
      */
-    public SerialOutputProcessing(final LinkedBlockingQueue<Protocol> SERIAL_OUTPUT_QUEUE,
+    public SerialOutputProcessing(final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE,
                                   final OutputStream SERIAL_OUT,
-                                  final Protocol transferElement)
+                                  final SerialProtocol transferElement)
     {
 
         this.SERIAL_OUTPUT_QUEUE = SERIAL_OUTPUT_QUEUE;
@@ -35,17 +35,24 @@ public class SerialOutputProcessing implements Runnable{
 
     public void run()
     {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         while( true )
         {
-            Protocol request;
+            SerialProtocol request;
             try{
                 request = SERIAL_OUTPUT_QUEUE.take();
 
                 transferElement.setThreadID(request.getThreadID());
                 transferElement.setRequest(request.getRequest());
+                transferElement.setSyncFlag(request.getSyncFlag());
 
-
-                System.out.println("Taken and writing request: " + transferElement.getRequest() + " from thread: " + transferElement.getThreadID());
+                System.out.println( "Taken and writing request: " + transferElement.getRequest() +
+                                    " sync: " + transferElement.getSyncFlag() +
+                                    " from thread: " + transferElement.getThreadID());
 
                 try{
                     SERIAL_OUT.write(transferElement.getRequest().getBytes());

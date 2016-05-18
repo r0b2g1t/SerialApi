@@ -3,12 +3,13 @@ package serialApi;
 /**
  * Created by robert on 14.05.16.
  */
-public class Protocol {
+public class SerialProtocol {
     private Long threadID;
+    private Boolean syncFlag;
     private String request;
     private String response;
 
-    public Protocol(Long threadID, String request){
+    public SerialProtocol(Long threadID, String request){
         this.threadID = threadID;
         this.request = request;
     }
@@ -25,6 +26,10 @@ public class Protocol {
         this.response = response;
     }
 
+    public void setSyncFlag(Boolean syncFlag){
+        this.syncFlag = syncFlag;
+    }
+
     public Long getThreadID(){
         return threadID;
     }
@@ -36,12 +41,21 @@ public class Protocol {
     public String getResponse(){
         return response;
     }
+
+    public Boolean getSyncFlag(){
+        return syncFlag;
+    }
+
     public void flush(){
         this.threadID = null;
         this.request = null;
         this.response = null;
+        this.syncFlag = null;
     }
+
+
+
     public String getAll(){
-        return String.valueOf(threadID) + ";" + request + ";" + response;
+        return String.valueOf(threadID) + ";" + request + ";" + response + ";" + syncFlag;
     }
 }

@@ -1,6 +1,7 @@
 package serialApi.serial;
 
-import serialApi.Protocol;
+import gnu.io.SerialPort;
+import serialApi.SerialProtocol;
 import serialApi.listener.EventClassListener;
 import serialApi.listener.ListenerHandler;
 import serialApi.listener.ResponseListener;
@@ -16,11 +17,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class SerialManager {
     private static SerialConfig CONFIGURATION;
-    private static LinkedBlockingQueue<Protocol> SerialOutputQueue;
-    private static ConcurrentHashMap<Long, BlockingQueue<Protocol>> responseQueueMap;
-    private static ConcurrentHashMap<Long, ArrayList> responderListenerListMap;
+    private static LinkedBlockingQueue<SerialProtocol> SerialOutputQueue;
+    private static ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap;
+    private static ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseSyncQueueMap;
+    private static ConcurrentHashMap<Long, ArrayList<ResponseListener>> responderListenerListMap;
     private static ConcurrentHashMap<EventClassListener, Long> listenerThreadMap;
-    private static ListenerHandler listenerHandler;
 
 
     /**
@@ -31,13 +32,12 @@ public class SerialManager {
         SerialManager.CONFIGURATION = CONFIGURATION;
         SerialOutputQueue = new LinkedBlockingQueue<>();
         responseQueueMap = new ConcurrentHashMap<>();
+        responseSyncQueueMap = new ConcurrentHashMap<>();
         responderListenerListMap = new ConcurrentHashMap<>();
         listenerThreadMap = new ConcurrentHashMap<>();
-        listenerHandler = new ListenerHandler(responseQueueMap, responderListenerListMap);
+        ListenerHandler listenerHandler = new ListenerHandler(responseQueueMap, responseSyncQueueMap, responderListenerListMap);
         final Thread listenerHandlerThread = new Thread(listenerHandler);
         listenerHandlerThread.start();
-
-
     }
 
     /**
@@ -47,21 +47,43 @@ public class SerialManager {
     public synchronized void addResponseListener(ResponseListener listener, Long threadID){
         if(!responderListenerListMap.containsKey(threadID)) {
             try {
-                responderListenerListMap.put(threadID, new ArrayList());
+                responderListenerListMap.put(threadID, new ArrayList<>());
             }catch (Exception e){
                 e.printStackTrace();
             }
         }
-        listenerThreadMap.put(listener, threadID);
-        responderListenerListMap.get(threadID).add(listener);
+        try {
+            listenerThreadMap.put(listener, threadID);
+            responderListenerListMap.get(threadID).add(listener);
+        } catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
      * @param listener  Listener object for the thread with the ID "threadID" witch will be removed
      */
     public synchronized void removeResponseListener(ResponseListener listener){
-        responderListenerListMap.get(listenerThreadMap.get(listener)).remove(listener);
-        listenerThreadMap.remove(listener);
+        try {
+            responderListenerListMap.get(listenerThreadMap.get(listener)).remove(listener);
+            listenerThreadMap.remove(listener);
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @param listener  Listener object for the thread with the ID "threadID" witch will be added
+     */
+    public synchronized void addNotificationListener(ResponseListener listener){
+        addResponseListener(listener, Long.valueOf("0"));
+    }
+
+    /**
+     * @param listener  Listener object for the thread with the ID "threadID" witch will be removed
+     */
+    public synchronized void removeNotificationListener(ResponseListener listener){
+        removeResponseListener(listener);
     }
 
 
@@ -80,6 +102,17 @@ public class SerialManager {
             e.printStackTrace();
             System.exit( 1 );
         }
+
+        /**
+         * creates the notification queue by using the threadID 0
+         */
+        try {
+            if(!responseQueueMap.containsKey(Long.valueOf("0"))) {
+                responseQueueMap.put(Long.valueOf("0"), new LinkedBlockingQueue<>());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -88,7 +121,26 @@ public class SerialManager {
      */
     public String syncWrite(final String data){
         String response;
-        write(data);
+        Long threadID = Thread.currentThread().getId();
+
+        System.out.println("ThreadID in syncWrite: " + threadID);
+
+        SerialProtocol transferElement = new SerialProtocol(null, null);
+        transferElement.setThreadID(Thread.currentThread().getId());
+        transferElement.setRequest(data);
+        transferElement.setSyncFlag(true);
+        try {
+            if(!responseQueueMap.containsKey(threadID)) {
+                responseQueueMap.put(threadID, new LinkedBlockingQueue<>());
+            }
+            if(!responseSyncQueueMap.containsKey(threadID)){
+                responseSyncQueueMap.put(threadID, new LinkedBlockingQueue<>());
+            }
+            SerialOutputQueue.add(transferElement);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
         response = read();
         return response;
     }
@@ -100,13 +152,16 @@ public class SerialManager {
 
         Long threadID = Thread.currentThread().getId();
 
-        Protocol transferElement = new Protocol(null, null);
+        SerialProtocol transferElement = new SerialProtocol(null, null);
         transferElement.setThreadID(Thread.currentThread().getId());
         transferElement.setRequest(data);
+        transferElement.setSyncFlag(false);
 
         System.out.println("ThreadID in write method: " + threadID);
         try {
-            responseQueueMap.put(threadID, new LinkedBlockingQueue<>());
+            if(!responseQueueMap.containsKey(threadID)) {
+                responseQueueMap.put(threadID, new LinkedBlockingQueue<>());
+            }
             SerialOutputQueue.add(transferElement);
         }catch (Exception e){
             e.printStackTrace();
@@ -119,10 +174,11 @@ public class SerialManager {
     public String read(){
 
         Long threadID = Thread.currentThread().getId();
+        System.out.println("ThreadID in read: " + threadID);
         try{
-            Protocol responseElement;
-            responseElement = responseQueueMap.get(threadID).poll(10, TimeUnit.SECONDS);
-            System.out.println("bla" + responseElement.getThreadID() + ";" + responseElement.getRequest() + ";" + responseElement.getResponse());
+            SerialProtocol responseElement;
+            responseElement = responseSyncQueueMap.get(threadID).poll(10, TimeUnit.SECONDS);
+            System.out.println( "Response: " + responseElement.getAll());
             return responseElement.getResponse();
         } catch (InterruptedException e) {
             e.printStackTrace();

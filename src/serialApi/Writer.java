@@ -12,28 +12,33 @@ public class Writer implements Runnable {
     private final BlockingQueue<String> inputQueue;
     private final SerialManager SerialMgm;
     private ResponseListener responseListener;
+    private ResponseListener notificationListener;
     private final Message response;
+    private final Message notification;
     public Writer (BlockingQueue<String> inputQueue, SerialManager SerialMgm){
         this.inputQueue = inputQueue;
         this.SerialMgm = SerialMgm;
         response = new Message("");
+        notification = new Message("");
 
 
     }
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getId());
         responseListener = new ResponseListener(response);
+        notificationListener = new ResponseListener(notification);
         SerialMgm.addResponseListener(responseListener, Thread.currentThread().getId());
+        SerialMgm.addNotificationListener(notificationListener);
         //SerialMgm.addResponseListener(responseListener, Long.valueOf("1"));
 
         while(true){
             String request;
             try{
                 request = inputQueue.take();
+                Thread.sleep(1500);
                 SerialMgm.write(request);
-                Thread.sleep(2000);
+
                 System.out.println("Response in writerThread: " + response.getText());
                 /*if(!request.equals(null)) {
                     SerialMgm.removeResponseListener(responseListener);

@@ -7,7 +7,7 @@ package serialApi.serial;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
-import serialApi.Protocol;
+import serialApi.SerialProtocol;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +19,7 @@ public class SerialConnection
 
     private static SerialPort serialPort;
     private final SerialConfig CONFIGURATION;
-    private final Protocol transferElement = new Protocol(null, null);
+    private final SerialProtocol transferElement = new SerialProtocol(null, null);
 
     /**
      * @param CONFIGURATION holds the port-configuration-parameters
@@ -35,15 +35,15 @@ public class SerialConnection
      * @param responseQueueMap      HashMap witch handle the response queues for every separate thread
      * @throws Exception            throws Exceptions if necessary
      */
-    public void connect(final LinkedBlockingQueue<Protocol> SERIAL_OUTPUT_QUEUE,
-                        final ConcurrentHashMap<Long, BlockingQueue<Protocol>> responseQueueMap)
+    public void connect(final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE,
+                        final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap)
             throws Exception
     {
         CommPortIdentifier portIdentifier =
                 CommPortIdentifier.getPortIdentifier(CONFIGURATION.getPort());
 
-        System.out.println("Trying to use serial port: " +
-                CONFIGURATION.getPort());
+        System.out.println( "Trying to use serial port: " +
+                            CONFIGURATION.getPort());
 
         if ( portIdentifier.isCurrentlyOwned() )
         {
@@ -56,10 +56,10 @@ public class SerialConnection
             if ( commPort instanceof SerialPort )
             {
                 serialPort = (SerialPort) commPort;
-                serialPort.setSerialPortParams(CONFIGURATION.getBaudRate(),
-                        CONFIGURATION.getDataBits(),
-                        CONFIGURATION.getStopBits(),
-                        CONFIGURATION.getParity());
+                serialPort.setSerialPortParams( CONFIGURATION.getBaudRate(),
+                                                CONFIGURATION.getDataBits(),
+                                                CONFIGURATION.getStopBits(),
+                                                CONFIGURATION.getParity());
 
                 SerialOutputProcessing serialOutputProcessor =
                         new SerialOutputProcessing( SERIAL_OUTPUT_QUEUE,
