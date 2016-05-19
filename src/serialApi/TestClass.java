@@ -30,7 +30,7 @@ public class TestClass {
         SerialMgm.connect();
 
         // add data to the WriterThreads via inputQueues for asynchronous writing
-        inputQueue.add("0");
+        /*inputQueue.add("0");
         inputQueue.add("1");
         inputQueue.add("0");
         inputQueue.add("1");
@@ -53,6 +53,6 @@ public class TestClass {
 
         // Synchronous writing
         //System.out.println("Write sync:");
-        System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("1"));
+        //System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("1"));
     }
 }

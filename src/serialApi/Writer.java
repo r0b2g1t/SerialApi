@@ -40,6 +40,7 @@ public class Writer implements Runnable {
                 SerialMgm.write(request);
 
                 System.out.println("Response in writerThread: " + response.getText());
+                System.out.println("Notification in writerThread: " + notification.getText());
                 /*if(!request.equals(null)) {
                     SerialMgm.removeResponseListener(responseListener);
                     request = "";
