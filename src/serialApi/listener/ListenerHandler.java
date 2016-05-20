@@ -19,7 +19,7 @@ public class ListenerHandler implements Runnable {
 
     /**
      * @param responseQueueMap          ConcurrentHasMap witch holds the response queues of the threads
-     * @param responseSyncQueueMap
+     * @param responseSyncQueueMap      ConcurrentHasMap witch holds the response queues of the synchronous requests
      * @param responderListenerListMap  ConcurrentHashMap witch holds the registrated listeners
      */
     public ListenerHandler(ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap,
@@ -44,7 +44,6 @@ public class ListenerHandler implements Runnable {
                         if(response.getSyncFlag().equals(true)) {
                             responseSyncQueueMap.get(key).add(response);
                         }else {
-                            System.out.println("ThreadID in Handler: " + response.getThreadID());
                             listeners = responderListenerListMap.get(response.getThreadID());
                             Iterator i = listeners.iterator();
 

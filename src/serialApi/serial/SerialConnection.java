@@ -7,11 +7,13 @@ package serialApi.serial;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+import serialApi.Message;
 import serialApi.SerialProtocol;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class SerialConnection
@@ -20,9 +22,10 @@ public class SerialConnection
     private static SerialPort serialPort;
     private final SerialConfig CONFIGURATION;
     private final SerialProtocol transferElement = new SerialProtocol(null, null);
+    private final AtomicInteger sendSignal = new AtomicInteger(0);
 
     /**
-     * @param CONFIGURATION holds the port-configuration-parameters
+     * @param CONFIGURATION Holds the port-configuration-parameters
      */
     public SerialConnection(final SerialConfig CONFIGURATION ){
         super();
@@ -33,7 +36,7 @@ public class SerialConnection
     /**
      * @param SERIAL_OUTPUT_QUEUE   request queue for all thread
      * @param responseQueueMap      HashMap witch handle the response queues for every separate thread
-     * @throws Exception            throws Exceptions if necessary
+     * @throws Exception            Throws Exceptions if necessary
      */
     public void connect(final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE,
                         final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap)
@@ -64,14 +67,17 @@ public class SerialConnection
                 SerialOutputProcessing serialOutputProcessor =
                         new SerialOutputProcessing( SERIAL_OUTPUT_QUEUE,
                                                     serialPort.getOutputStream(),
-                                                    transferElement);
+                                                    transferElement,
+                                                    sendSignal);
 
                 new Thread(serialOutputProcessor).start();
 
                 serialPort.addEventListener(
-                        new SerialReader( serialPort.getInputStream(),
-                                          responseQueueMap,
-                                          transferElement));
+                        new SerialReader(   CONFIGURATION,
+                                            serialPort.getInputStream(),
+                                            responseQueueMap,
+                                            transferElement,
+                                            sendSignal));
 
                 serialPort.notifyOnDataAvailable(true);
             }
@@ -83,7 +89,7 @@ public class SerialConnection
     }
 
     /**
-     * terminates the serialPort instance by the close method
+     * erminates the serialPort instance by the close method
      */
     private void close()
     {

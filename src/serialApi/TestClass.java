@@ -18,7 +18,7 @@ public class TestClass {
         BlockingQueue<String> inputQueue = new LinkedBlockingQueue<>();
 
         // set path to the properties file
-        String file = "/Users/robert/Documents/serial.properties";
+        String file = "/Users/robert/IdeaProjects/SerialApi/src/serialApi/serial/serial.properties";
 
         SerialConfig CONFIGURATION = new SerialConfig(file);
 
@@ -27,29 +27,20 @@ public class TestClass {
 
         SerialMgm = new SerialManager(CONFIGURATION);
 
-        SerialMgm.connect();
+        SerialMgm.init();
 
         // add data to the WriterThreads via inputQueues for asynchronous writing
-        /*inputQueue.add("0");
         inputQueue.add("1");
         inputQueue.add("0");
-        inputQueue.add("1");
+        /*inputQueue.add("1");
         inputQueue.add("0");
         inputQueue.add("1");
-
-
-        /*inputQueue2.add("1");
-        inputQueue2.add("0");*/
-
+        inputQueue.add("0");*/
 
         Writer writer = new Writer(inputQueue, SerialMgm);
-        /*Writer writer2 = new Writer(inputQueue2, SerialMgm);
-        final Thread writerThread2 = new Thread(writer2);*/
         final Thread writerThread = new Thread(writer);
 
         writerThread.start();
-
-        //writerThread2.start();
 
         // Synchronous writing
         //System.out.println("Write sync:");

@@ -85,7 +85,20 @@ public class SerialConfig{
         return Integer.parseInt( config.getProperty("SERIAL_PARITY"));
     }
 
+    /**
+     * @return  Returns the character witch indicates the end of response
+     */
+    public String getEndOfResponseCharacter()
+    {
+        return config.getProperty("RESPONSE_END");
+    }
 
+    /**
+     * @return  Returns the tag witch indicates that the transmitted data is a notification
+     */
+    public String getNotificationTag(){
+        return config.getProperty("NOTIFICATION_TAG");
+    }
 
     /**
      *
@@ -142,4 +155,20 @@ public class SerialConfig{
     {
         config.setProperty("SERIAL_PARITY", parity.toString());
     }
+
+    /**
+     * @param endOfResponse Sets the character witch indicates the end of response
+     */
+    public void setEndOfResponseCharacter(String endOfResponse)
+    {
+        config.setProperty("RESPONSE_END", endOfResponse);
+    }
+
+    /**
+     * @param notificationTag   Sets the tag witch indicates that the transmitted data is a notification
+     */
+    public void setNotificationTag(String notificationTag){
+        config.setProperty("NOTIFICATION_TAG", notificationTag);
+    }
+
 }

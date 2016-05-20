@@ -38,9 +38,11 @@ public class Writer implements Runnable {
                 request = inputQueue.take();
                 Thread.sleep(1500);
                 SerialMgm.write(request);
-
+                Thread.sleep(1500);
                 System.out.println("Response in writerThread: " + response.getText());
                 System.out.println("Notification in writerThread: " + notification.getText());
+                SerialMgm.removeResponseListener(responseListener);
+                SerialMgm.removeResponseListener(responseListener);
                 /*if(!request.equals(null)) {
                     SerialMgm.removeResponseListener(responseListener);
                     request = "";
