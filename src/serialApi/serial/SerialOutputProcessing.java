@@ -72,4 +72,7 @@ public class SerialOutputProcessing implements Runnable{
             }
         }
     }
+    public void terminate(){
+        Thread.currentThread().interrupt();
+    }
 }

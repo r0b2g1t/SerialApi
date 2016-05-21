@@ -32,9 +32,9 @@ public class TestClass {
         // add data to the WriterThreads via inputQueues for asynchronous writing
         inputQueue.add("1");
         inputQueue.add("0");
-        /*inputQueue.add("1");
-        inputQueue.add("0");
         inputQueue.add("1");
+        inputQueue.add("0");
+        /*inputQueue.add("1");
         inputQueue.add("0");*/
 
         Writer writer = new Writer(inputQueue, SerialMgm);

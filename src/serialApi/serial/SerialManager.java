@@ -21,6 +21,7 @@ public class SerialManager {
     private static ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseSyncQueueMap;
     private static ConcurrentHashMap<Long, ArrayList<ResponseListener>> responderListenerListMap;
     private static ConcurrentHashMap<EventClassListener, Long> listenerThreadMap;
+    private static SerialConnection serialConn;
 
 
     /**
@@ -37,6 +38,7 @@ public class SerialManager {
         ListenerHandler listenerHandler = new ListenerHandler(responseQueueMap, responseSyncQueueMap, responderListenerListMap);
         final Thread listenerHandlerThread = new Thread(listenerHandler);
         listenerHandlerThread.start();
+        this.serialConn = new SerialConnection(CONFIGURATION);
     }
 
     /**
@@ -44,7 +46,7 @@ public class SerialManager {
      */
     public void init(){
 
-        SerialConnection serialConn = new SerialConnection(CONFIGURATION);
+        //SerialConnection serialConn = new SerialConnection(CONFIGURATION);
         try {
             serialConn.connect(SerialOutputQueue,
                                 responseQueueMap);
@@ -54,6 +56,7 @@ public class SerialManager {
             e.printStackTrace();
             System.exit( 1 );
         }
+
 
         /**
          * Creates the notification queue by using the threadID 0
@@ -65,6 +68,25 @@ public class SerialManager {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Is reconnecting the serial device.
+     */
+    public void reconnect(){
+        try {
+            serialConn.close();
+            serialConn.connect(SerialOutputQueue, responseQueueMap);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Closing the connection to the serial device.
+     */
+    public void close(){
+        serialConn.close();
     }
 
     /**

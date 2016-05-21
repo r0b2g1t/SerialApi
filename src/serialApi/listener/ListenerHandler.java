@@ -52,6 +52,15 @@ public class ListenerHandler implements Runnable {
                                 responseMessage.setText(response.getAll());
                                 ((EventClassListener) i.next()).responseArrived(responseMessage);
                             }
+                            if(!responderListenerListMap.get(Long.parseLong("all", 36)).isEmpty()){
+                                listeners = responderListenerListMap.get(Long.parseLong("all", 36));
+                                Iterator iAll = listeners.iterator();
+                                // triggers all listeners witch are registrated for response-events for the thread with threadID
+                                while (iAll.hasNext()) {
+                                    responseMessage.setText(response.getAll());
+                                    ((EventClassListener) iAll.next()).responseArrived(responseMessage);
+                                }
+                            }
                         }
                     }
                 } catch (NullPointerException e) {

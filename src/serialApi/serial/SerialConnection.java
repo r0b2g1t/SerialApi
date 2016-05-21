@@ -7,7 +7,6 @@ package serialApi.serial;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
-import serialApi.Message;
 import serialApi.SerialProtocol;
 
 import java.util.concurrent.BlockingQueue;
@@ -23,6 +22,7 @@ public class SerialConnection
     private final SerialConfig CONFIGURATION;
     private final SerialProtocol transferElement = new SerialProtocol(null, null);
     private final AtomicInteger sendSignal = new AtomicInteger(0);
+    private SerialOutputProcessing serialOutputProcessor;
 
     /**
      * @param CONFIGURATION Holds the port-configuration-parameters
@@ -42,6 +42,7 @@ public class SerialConnection
                         final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap)
             throws Exception
     {
+        sendSignal.set(0);
         CommPortIdentifier portIdentifier =
                 CommPortIdentifier.getPortIdentifier(CONFIGURATION.getPort());
 
@@ -64,7 +65,7 @@ public class SerialConnection
                                                 CONFIGURATION.getStopBits(),
                                                 CONFIGURATION.getParity());
 
-                SerialOutputProcessing serialOutputProcessor =
+                this.serialOutputProcessor =
                         new SerialOutputProcessing( SERIAL_OUTPUT_QUEUE,
                                                     serialPort.getOutputStream(),
                                                     transferElement,
@@ -89,11 +90,14 @@ public class SerialConnection
     }
 
     /**
-     * erminates the serialPort instance by the close method
+     * Terminates the serialPort instance by the close method
      */
-    private void close()
+    public synchronized void close()
     {
         try{
+            serialPort.getOutputStream().close();
+            serialPort.removeEventListener();
+            serialOutputProcessor.terminate();
             serialPort.close();
 
         }catch( Exception e ){
