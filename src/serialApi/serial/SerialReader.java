@@ -6,8 +6,8 @@ package serialApi.serial;
 
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
-import serialApi.LoggerCollector;
-import serialApi.SerialProtocol;
+import serialApi.helper.LoggerCollector;
+import serialApi.helper.SerialProtocol;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -96,14 +96,14 @@ public class SerialReader implements SerialPortEventListener{
                                         "No end of response found add {0} to responseCache {1}.",
                                         new Object[]{responseBuilder, responseCache});
 
-                    if(responseCache.equals("")) {
+                    if(!responseCache.equals("")) {
                         responseCache += responseBuilder;
                     }else{
                         responseCache = responseBuilder;
                     }
                 }
 
-                if(response.equals("")) {
+                if(!response.equals("")) {
                     if (response.contains(CONFIGURATION.getNotificationTag())) {
                         responseElement.flush();
                         responseElement.setThreadID(0L);

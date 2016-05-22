@@ -1,4 +1,4 @@
-package serialApi;
+package serialApi.helper;
 
 import serialApi.serial.SerialConfig;
 

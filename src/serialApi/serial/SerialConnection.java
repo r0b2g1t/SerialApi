@@ -5,8 +5,8 @@ package serialApi.serial;
  */
 
 import gnu.io.*;
-import serialApi.LoggerCollector;
-import serialApi.SerialProtocol;
+import serialApi.helper.LoggerCollector;
+import serialApi.helper.SerialProtocol;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;

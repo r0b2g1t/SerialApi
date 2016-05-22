@@ -1,4 +1,4 @@
-package serialApi;
+package serialApi.helper;
 
 /**
  * Created by robert on 03.05.16.

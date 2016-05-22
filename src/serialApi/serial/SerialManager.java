@@ -1,7 +1,7 @@
 package serialApi.serial;
 
-import serialApi.LoggerCollector;
-import serialApi.SerialProtocol;
+import serialApi.helper.LoggerCollector;
+import serialApi.helper.SerialProtocol;
 import serialApi.listener.EventClassListener;
 import serialApi.listener.ListenerHandler;
 import serialApi.listener.ResponseListener;

@@ -4,8 +4,8 @@ package serialApi.serial;
  * Created by robert on 21.04.16.
  */
 
-import serialApi.LoggerCollector;
-import serialApi.SerialProtocol;
+import serialApi.helper.LoggerCollector;
+import serialApi.helper.SerialProtocol;
 
 import java.io.IOException;
 import java.io.OutputStream;

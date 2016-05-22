@@ -1,8 +1,8 @@
 package serialApi.listener;
 
-import serialApi.LoggerCollector;
-import serialApi.Message;
-import serialApi.SerialProtocol;
+import serialApi.helper.LoggerCollector;
+import serialApi.helper.Message;
+import serialApi.helper.SerialProtocol;
 import serialApi.exceptions.NoListenerException;
 
 import java.util.ArrayList;
@@ -51,6 +51,7 @@ public class ListenerHandler implements Runnable {
 
                     if(!responseQueueMap.get(key).isEmpty()){
                         response = responseQueueMap.get(key).take();
+                        logger.wrapper.log(Level.FINEST, "Response {0} taken from queue.", response.getAll());
 
                         if(response.getSyncFlag().equals(true)) {
                             responseSyncQueueMap.get(key).add(response);
@@ -66,6 +67,9 @@ public class ListenerHandler implements Runnable {
                             while (i.hasNext()) {
                                 responseMessage.setText(response.getAll());
                                 ((EventClassListener) i.next()).responseArrived(responseMessage);
+                                logger.wrapper.log(Level.FINEST,
+                                        "ResponseMessage {0} send to listener {1}.",
+                                        new Object[]{responseMessage.getText(), i});
                             }
 
                             if(!(responderListenerListMap.get(Long.parseLong("all", 36)) == null)){

@@ -1,5 +1,6 @@
 package serialApi;
 
+import serialApi.helper.Message;
 import serialApi.listener.ResponseListener;
 import serialApi.serial.SerialManager;
 

@@ -1,6 +1,6 @@
 package serialApi.listener;
 
-import serialApi.Message;
+import serialApi.helper.Message;
 
 /**
  * Created by robert on 14.05.16.
