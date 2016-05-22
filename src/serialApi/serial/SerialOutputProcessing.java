@@ -23,10 +23,10 @@ public class SerialOutputProcessing implements Runnable{
     private final AtomicInteger sendSignal;
 
     /**
-     * @param SERIAL_OUTPUT_QUEUE   Request queue for data transmission to the rxtx-library
-     * @param SERIAL_OUT            Serial output stream of the serial device via the rxtx-library
-     * @param transferElement       Shared object witch carries the information of the last written request to
-     * @param sendSignal
+     * @param SERIAL_OUTPUT_QUEUE   Request queue for data transmission to the rxtx-library.
+     * @param SERIAL_OUT            Serial output stream of the serial device via the rxtx-library.
+     * @param transferElement       Shared object witch carries the information of the last written request to.
+     * @param sendSignal            Signal object indicat the possibility to send request to device.
      */
     public SerialOutputProcessing(final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE,
                                   final OutputStream SERIAL_OUT,
@@ -42,12 +42,6 @@ public class SerialOutputProcessing implements Runnable{
 
     public void run()
     {
-        /*try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            logger.wrapper.log(Level.WARNING, "Initial sleep was interrupted.");
-            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
-        }*/
         while( true )
         {
             SerialProtocol request;

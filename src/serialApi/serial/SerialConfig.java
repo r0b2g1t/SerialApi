@@ -2,9 +2,6 @@ package serialApi.serial;
 
 import java.io.FileInputStream;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 
 /**
  * Created by robert on 21.04.16.
@@ -224,9 +221,9 @@ public class SerialConfig{
     }
 
     /**
-     * @param systemLogParth    Sets the path of the system logfile.
+     * @param systemLogPath    Sets the path of the system logfile.
      */
-    public void setSystemLogParth(String systemLogParth){
-        config.setProperty("SYSTEM_LOG_PATH", systemLogParth);
+    public void setSystemLogPath(String systemLogPath){
+        config.setProperty("SYSTEM_LOG_PATH", systemLogPath);
     }
 }

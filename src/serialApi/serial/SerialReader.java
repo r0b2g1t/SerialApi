@@ -25,17 +25,17 @@ public class SerialReader implements SerialPortEventListener{
     private final SerialProtocol transferElement;
     private final SerialConfig CONFIGURATION;
     private final AtomicInteger sendSignal;
+    private final byte[] readBuffer = new byte[400];
 
-    private byte[] readBuffer = new byte[400];
     private String responseCache = "";
     private String responseBuilder;
 
     /**
-     * @param CONFIGURATION
+     * @param CONFIGURATION     Holds the port-configuration-parameters.
      * @param inputStream       InputStream for handling the available data
      * @param responseQueueMap  HashMap witch handle the response queues for every separate thread
      * @param transferElement   Shared object witch carry the information of the last written request to the device
-     * @param sendSignal
+     * @param sendSignal        Signal object indicat the possibility to send request to device.
      */
     public SerialReader(SerialConfig CONFIGURATION, InputStream inputStream,
                         ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap,
@@ -96,14 +96,14 @@ public class SerialReader implements SerialPortEventListener{
                                         "No end of response found add {0} to responseCache {1}.",
                                         new Object[]{responseBuilder, responseCache});
 
-                    if(responseCache != "") {
+                    if(responseCache.equals("")) {
                         responseCache += responseBuilder;
                     }else{
                         responseCache = responseBuilder;
                     }
                 }
 
-                if(response != "") {
+                if(response.equals("")) {
                     if (response.contains(CONFIGURATION.getNotificationTag())) {
                         responseElement.flush();
                         responseElement.setThreadID(0L);

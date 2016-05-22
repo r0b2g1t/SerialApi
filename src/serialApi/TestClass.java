@@ -23,7 +23,7 @@ public class TestClass {
         SerialConfig CONFIGURATION = new SerialConfig(file);
 
         // Set the COM-Port
-        CONFIGURATION.setPort("/dev/cu.wchusbserial142");
+        CONFIGURATION.setPort("/dev/cu.wchusbserial1420");
 
         SerialMgm = new SerialManager(CONFIGURATION);
 
