@@ -9,14 +9,18 @@ import java.util.concurrent.BlockingQueue;
  * Created by robert on 09.05.16.
  */
 public class Writer implements Runnable {
-    private final BlockingQueue<String> inputQueue;
-    private final SerialManager SerialMgm;
+
+
     private ResponseListener responseListener;
     private ResponseListener responseListenerAll;
     private ResponseListener notificationListener;
+
     private final Message response;
     private final Message responseAll;
     private final Message notification;
+    private final BlockingQueue<String> inputQueue;
+    private final SerialManager SerialMgm;
+
     public Writer (BlockingQueue<String> inputQueue, SerialManager SerialMgm){
         this.inputQueue = inputQueue;
         this.SerialMgm = SerialMgm;
@@ -34,7 +38,6 @@ public class Writer implements Runnable {
         notificationListener = new ResponseListener(notification);
         SerialMgm.addResponseListener(responseListener, Thread.currentThread().getId());
         SerialMgm.addResponseListener(responseListenerAll, Long.parseLong("all", 36));
-        System.out.println(Long.parseLong("all", 36));
         SerialMgm.addNotificationListener(notificationListener);
         //SerialMgm.addResponseListener(responseListener, Long.valueOf("1"));
 

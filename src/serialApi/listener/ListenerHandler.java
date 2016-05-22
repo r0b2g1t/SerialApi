@@ -1,20 +1,27 @@
 package serialApi.listener;
 
+import serialApi.LoggerCollector;
 import serialApi.Message;
 import serialApi.SerialProtocol;
+import serialApi.exceptions.NoListenerException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 /**
  * Created by robert on 13.05.16.
  */
 public class ListenerHandler implements Runnable {
+
+    private static LoggerCollector logger;
+
     private final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap;
     private final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseSyncQueueMap;
     private final ConcurrentHashMap<Long, ArrayList<ResponseListener>> responderListenerListMap;
+
     private final Message responseMessage;
 
     /**
@@ -30,6 +37,8 @@ public class ListenerHandler implements Runnable {
         this.responseSyncQueueMap = responseSyncQueueMap;
         this.responderListenerListMap = responderListenerListMap;
         this.responseMessage = new Message("");
+
+        logger = new LoggerCollector().getInstance();
     }
 
     @Override
@@ -39,12 +48,18 @@ public class ListenerHandler implements Runnable {
                 SerialProtocol response = null;
                 try {
                     ArrayList listeners;
+
                     if(!responseQueueMap.get(key).isEmpty()){
                         response = responseQueueMap.get(key).take();
+
                         if(response.getSyncFlag().equals(true)) {
                             responseSyncQueueMap.get(key).add(response);
                         }else {
                             listeners = responderListenerListMap.get(response.getThreadID());
+
+                            if(listeners == null){
+                                throw(new NoListenerException());
+                            }
                             Iterator i = listeners.iterator();
 
                             // triggers all listeners witch are registrated for response-events for the thread with threadID
@@ -52,9 +67,11 @@ public class ListenerHandler implements Runnable {
                                 responseMessage.setText(response.getAll());
                                 ((EventClassListener) i.next()).responseArrived(responseMessage);
                             }
-                            if(!responderListenerListMap.get(Long.parseLong("all", 36)).isEmpty()){
+
+                            if(!(responderListenerListMap.get(Long.parseLong("all", 36)) == null)){
                                 listeners = responderListenerListMap.get(Long.parseLong("all", 36));
                                 Iterator iAll = listeners.iterator();
+
                                 // triggers all listeners witch are registrated for response-events for the thread with threadID
                                 while (iAll.hasNext()) {
                                     responseMessage.setText(response.getAll());
@@ -63,13 +80,13 @@ public class ListenerHandler implements Runnable {
                             }
                         }
                     }
-                } catch (NullPointerException e) {
-                    assert response != null;
-                    System.err.println( "No listener added for the threadID: " + response.getThreadID() +
-                                        " - " + e.getClass() + " in " + this.getClass().getName());
-
-                } catch (InterruptedException ie){
-                    ie.printStackTrace();
+                } catch (InterruptedException e){
+                    logger.wrapper.log(Level.WARNING,
+                            "ListenerHandler can't take response from responseQueue for thread {0}.", key);
+                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+                } catch (NoListenerException e) {
+                    logger.wrapper.log(Level.WARNING, "No listener found for thread {0}.", response.getThreadID());
+                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
                 }
             }
         }

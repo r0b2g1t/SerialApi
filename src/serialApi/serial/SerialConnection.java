@@ -4,93 +4,124 @@ package serialApi.serial;
  * Created by robert on 21.04.16.
  */
 
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
+import gnu.io.*;
+import serialApi.LoggerCollector;
 import serialApi.SerialProtocol;
 
+import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 
 public class SerialConnection
 {
-
+    private static LoggerCollector logger;
     private static SerialPort serialPort;
+    private static CommPortIdentifier portIdentifier;
+    private static CommPort commPort;
+
     private final SerialConfig CONFIGURATION;
     private final SerialProtocol transferElement = new SerialProtocol(null, null);
     private final AtomicInteger sendSignal = new AtomicInteger(0);
+
     private SerialOutputProcessing serialOutputProcessor;
 
+
     /**
-     * @param CONFIGURATION Holds the port-configuration-parameters
+     * @param CONFIGURATION Holds the port-configuration-parameters.
      */
     public SerialConnection(final SerialConfig CONFIGURATION ){
         super();
         this.CONFIGURATION = CONFIGURATION;
+        logger = new LoggerCollector().getInstance();
     }
 
 
     /**
-     * @param SERIAL_OUTPUT_QUEUE   request queue for all thread
-     * @param responseQueueMap      HashMap witch handle the response queues for every separate thread
-     * @throws Exception            Throws Exceptions if necessary
+     * @param SERIAL_OUTPUT_QUEUE   request queue for all thread.
+     * @param responseQueueMap      HashMap witch handle the response queues for every separate thread.
+     * @throws Exception            Throws Exceptions if necessary.
      */
     public void connect(final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE,
                         final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap)
             throws Exception
     {
         sendSignal.set(0);
-        CommPortIdentifier portIdentifier =
-                CommPortIdentifier.getPortIdentifier(CONFIGURATION.getPort());
+        try{
+            portIdentifier = CommPortIdentifier.getPortIdentifier(CONFIGURATION.getPort());
+        } catch (NoSuchPortException e){
+            logger.wrapper.log(Level.SEVERE,"Port {0} not found.", CONFIGURATION.getPort());
+            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+        }
 
-        System.out.println( "Trying to use serial port: " +
-                            CONFIGURATION.getPort());
-
-        if ( portIdentifier.isCurrentlyOwned() )
+        if (portIdentifier.isCurrentlyOwned())
         {
-            System.out.println("Error: Port is currently in use");
+            logger.wrapper.log(Level.SEVERE, "Error: Port is currently in use.");
         }
         else
         {
-            CommPort commPort = portIdentifier.open(this.getClass().getName(),CONFIGURATION.getTimeoutMsWaitForOpen());
+            try {
+                commPort = portIdentifier.open(this.getClass().getName(), CONFIGURATION.getTimeoutMsWaitForOpen());
+                logger.wrapper.log(Level.FINEST, "Connection to port {0} established.", CONFIGURATION.getPort());
+            } catch (PortInUseException e){
+                logger.wrapper.log(Level.SEVERE, "Port {0} is in use.", CONFIGURATION.getPort());
+                logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+            }
 
             if ( commPort instanceof SerialPort )
             {
                 serialPort = (SerialPort) commPort;
-                serialPort.setSerialPortParams( CONFIGURATION.getBaudRate(),
-                                                CONFIGURATION.getDataBits(),
-                                                CONFIGURATION.getStopBits(),
-                                                CONFIGURATION.getParity());
+                try {
+                    serialPort.setSerialPortParams(CONFIGURATION.getBaudRate(),
+                            CONFIGURATION.getDataBits(),
+                            CONFIGURATION.getStopBits(),
+                            CONFIGURATION.getParity());
+                    logger.wrapper.log(Level.FINEST, "Port configuration successful.");
+                } catch (final UnsupportedCommOperationException e){
+                    logger.wrapper.log(Level.SEVERE,"Port {0} did not allow parameter settings.",
+                            CONFIGURATION.getPort());
+                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+                }
+                try {
+                    serialPort.addEventListener(
+                            new SerialReader(CONFIGURATION,
+                                    serialPort.getInputStream(),
+                                    responseQueueMap,
+                                    transferElement,
+                                    sendSignal));
+                    logger.wrapper.log(Level.FINEST, "Serial port event listener added.");
+                } catch (IOException e){
+                    logger.wrapper.log(Level.SEVERE,"Port {0} raised input stream error.", CONFIGURATION.getPort());
+                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+                }
+                try {
+                    this.serialOutputProcessor =
+                            new SerialOutputProcessing(SERIAL_OUTPUT_QUEUE,
+                                    serialPort.getOutputStream(),
+                                    transferElement,
+                                    sendSignal);
 
-                this.serialOutputProcessor =
-                        new SerialOutputProcessing( SERIAL_OUTPUT_QUEUE,
-                                                    serialPort.getOutputStream(),
-                                                    transferElement,
-                                                    sendSignal);
-
-                new Thread(serialOutputProcessor).start();
-
-                serialPort.addEventListener(
-                        new SerialReader(   CONFIGURATION,
-                                            serialPort.getInputStream(),
-                                            responseQueueMap,
-                                            transferElement,
-                                            sendSignal));
+                    new Thread(serialOutputProcessor).start();
+                    logger.wrapper.log(Level.FINEST, "SerialOutputProcessor thread started.");
+                } catch (IOException e){
+                    logger.wrapper.log(Level.SEVERE,"Port {0} raised output stream error.", CONFIGURATION.getPort());
+                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+                }
 
                 serialPort.notifyOnDataAvailable(true);
             }
             else
             {
-                System.out.println("Error: Only serial ports are handled");
+                logger.wrapper.log(Level.SEVERE,"Port {0} is not a serial port.", CONFIGURATION.getPort());
             }
         }
     }
 
     /**
-     * Terminates the serialPort instance by the close method
+     * Terminates the serialPort instance by the close method.
      */
     public synchronized void close()
     {
@@ -99,9 +130,11 @@ public class SerialConnection
             serialPort.removeEventListener();
             serialOutputProcessor.terminate();
             serialPort.close();
+            logger.wrapper.log(Level.FINEST, "Serial connection closed.");
 
-        }catch( Exception e ){
-            e.printStackTrace();
+        }catch( IOException e ){
+            logger.wrapper.log(Level.SEVERE,"I/O exception on close out.");
+            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
         }
     }
 }

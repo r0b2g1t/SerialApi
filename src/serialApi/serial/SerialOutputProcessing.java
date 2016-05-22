@@ -4,14 +4,18 @@ package serialApi.serial;
  * Created by robert on 21.04.16.
  */
 
+import serialApi.LoggerCollector;
 import serialApi.SerialProtocol;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 public class SerialOutputProcessing implements Runnable{
+
+    private static LoggerCollector logger;
 
     private final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE;
     private final OutputStream SERIAL_OUT;
@@ -28,27 +32,29 @@ public class SerialOutputProcessing implements Runnable{
                                   final OutputStream SERIAL_OUT,
                                   final SerialProtocol transferElement, AtomicInteger sendSignal)
     {
-
         this.SERIAL_OUTPUT_QUEUE = SERIAL_OUTPUT_QUEUE;
         this.SERIAL_OUT = SERIAL_OUT;
         this.transferElement = transferElement;
         this.sendSignal = sendSignal;
+        logger = new LoggerCollector().getInstance();
     }
 
 
     public void run()
     {
-        try {
+        /*try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            logger.wrapper.log(Level.WARNING, "Initial sleep was interrupted.");
+            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+        }*/
         while( true )
         {
             SerialProtocol request;
             if(sendSignal.get() == 0) {
                 try {
                     request = SERIAL_OUTPUT_QUEUE.take();
+                    logger.wrapper.log(Level.FINEST, "Request {0} taken from serial output queue.", request.getAll());
 
                     transferElement.setThreadID(request.getThreadID());
                     transferElement.setRequest(request.getRequest());
@@ -60,19 +66,26 @@ public class SerialOutputProcessing implements Runnable{
 
                     try {
                         SERIAL_OUT.write(transferElement.getRequest().getBytes());
+                        logger.wrapper.log(Level.FINEST,
+                                           "Request {0} written to serial output stream.",
+                                           transferElement.getRequest());
                         SERIAL_OUT.flush();
-                    } catch (IOException ioe) {
-                        ioe.printStackTrace();
+
+                    } catch (IOException e) {
+                        logger.wrapper.log(Level.WARNING,"Can't write to serial output stream.");
+                        logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
                     }
 
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                } catch (InterruptedException e) {
+                    logger.wrapper.log(Level.WARNING, "Unable to take request from request queue.");
+                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
                 }
                 sendSignal.incrementAndGet();
             }
         }
     }
     public void terminate(){
+        logger.wrapper.log(Level.FINE, "SerialOutputProcessing thread will be terminating.");
         Thread.currentThread().interrupt();
     }
 }

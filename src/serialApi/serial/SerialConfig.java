@@ -2,6 +2,8 @@ package serialApi.serial;
 
 import java.io.FileInputStream;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -30,14 +32,14 @@ public class SerialConfig{
     }
 
     /**
-     * Configuration object witch holds the parameter set
+     * Configuration object witch holds the parameter set.
      */
     private SerialConfig() {
         config = new Properties();
     }
 
     /**
-     * @return  Returns the port-name in the configuration
+     * @return  Returns the port-name in the configuration.
      */
     public String getPort()
     {
@@ -45,7 +47,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the milliseconds to wait for serial connection is up
+     * @return  Returns the milliseconds to wait for serial connection is up.
      */
     public Integer getTimeoutMsWaitForOpen()
     {
@@ -53,7 +55,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the symbol rate for the connection
+     * @return  Returns the symbol rate for the connection.
      */
     public Integer getBaudRate()
     {
@@ -61,7 +63,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the number of data bits in a character
+     * @return  Returns the number of data bits in a character.
      */
     public Integer getDataBits()
     {
@@ -69,7 +71,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the number of stop bits for the signaling of the end of a character
+     * @return  Returns the number of stop bits for the signaling of the end of a character.
      */
     public Integer getStopBits()
     {
@@ -77,7 +79,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the error detection of the transmission
+     * @return  Returns the error detection of the transmission.
      *                 PARITY NONE=0, ODD=1, Even=2
      */
     public Integer getParity()
@@ -86,7 +88,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the character witch indicates the end of response
+     * @return  Returns the character witch indicates the end of response.
      */
     public String getEndOfResponseCharacter()
     {
@@ -94,11 +96,40 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the tag witch indicates that the transmitted data is a notification
+     * @return  Returns the tag witch indicates that the transmitted data is a notification.
      */
     public String getNotificationTag(){
         return config.getProperty("NOTIFICATION_TAG");
     }
+
+    /**
+     * @return  Returns the path to the logfile.
+     */
+    public String getLogPath(){
+        return config.getProperty("LOG_PATH");
+    }
+
+    /**
+     * @return  Returns the level of logging for the loggerWrapper.
+     */
+    public String getLogLevel(){
+        return config.getProperty("LOG_LEVEL");
+    }
+
+    /**
+     * @return  Returns the the state of the logger true for on, false for off.
+     */
+    public String getSystemLog() {
+        return config.getProperty("SYSTEM_LOG");
+    }
+
+    /**
+     * @return  Returns the path to the system logfile.
+     */
+    public String getSystemLogPath(){
+        return config.getProperty("SYSTEM_LOG_PATH");
+    }
+
 
     /**
      *
@@ -107,7 +138,7 @@ public class SerialConfig{
      */
 
     /**
-     * @param port  Sets the serial device COM-port
+     * @param port  Sets the serial device COM-port.
      */
     public void setPort(String port)
     {
@@ -115,7 +146,7 @@ public class SerialConfig{
     }
 
     /**
-     * @param timeoutMSWaitForOpen  Sets the Milliseconds-to-wait-for-open-connection-timeout-variable
+     * @param timeoutMSWaitForOpen  Sets the Milliseconds-to-wait-for-open-connection-timeout-variable.
      */
     public void setTimeoutMSWaitForOpen(Integer timeoutMSWaitForOpen)
     {
@@ -123,7 +154,7 @@ public class SerialConfig{
     }
 
     /**
-     * @param baudRate  Sets the symbol rate for the connection
+     * @param baudRate  Sets the symbol rate for the connection.
      */
     public void setBaudRate(Integer baudRate)
     {
@@ -132,7 +163,7 @@ public class SerialConfig{
 
 
     /**
-     * @param dataBits  Sets the number of data bits in a character
+     * @param dataBits  Sets the number of data bits in a character.
      */
     public void setDataBits(Integer dataBits)
     {
@@ -141,14 +172,14 @@ public class SerialConfig{
 
 
     /**
-     * @param stopBits  Set the number of stop bits for the signaling of the end of a character
+     * @param stopBits  Set the number of stop bits for the signaling of the end of a character.
      */
     public void setStopBits(Integer stopBits) {
         config.setProperty("SERIAL_STOP_BITS", stopBits.toString());
     }
 
     /**
-     * @param parity    Sets the error detection of the transmission
+     * @param parity    Sets the error detection of the transmission.
      *                  PARITY NONE=0, ODD=1, Even=2
      */
     public void setParity(Integer parity)
@@ -157,7 +188,7 @@ public class SerialConfig{
     }
 
     /**
-     * @param endOfResponse Sets the character witch indicates the end of response
+     * @param endOfResponse Sets the character witch indicates the end of response.
      */
     public void setEndOfResponseCharacter(String endOfResponse)
     {
@@ -165,10 +196,37 @@ public class SerialConfig{
     }
 
     /**
-     * @param notificationTag   Sets the tag witch indicates that the transmitted data is a notification
+     * @param notificationTag   Sets the tag witch indicates that the transmitted data is a notification.
      */
     public void setNotificationTag(String notificationTag){
         config.setProperty("NOTIFICATION_TAG", notificationTag);
     }
 
+    /**
+     * @param logPath   Sets the path to the logfile.
+     */
+    public void setLogPath(String logPath){
+        config.setProperty("LOG_PATH", logPath);
+    }
+
+    /**
+     * @param logLevel  Sets the Level of logging for the loggerWrapper.
+     */
+    public void setLogLevel(String logLevel){
+        config.setProperty("LOG_LEVEL", logLevel);
+    }
+
+    /**
+     * @param onOff Switch the system logger on (true) or off(false).
+     */
+    public void setSystemLog(String onOff){
+        config.setProperty("SYSTEM_LOG", onOff);
+    }
+
+    /**
+     * @param systemLogParth    Sets the path of the system logfile.
+     */
+    public void setSystemLogParth(String systemLogParth){
+        config.setProperty("SYSTEM_LOG_PATH", systemLogParth);
+    }
 }

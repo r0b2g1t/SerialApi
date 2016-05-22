@@ -19,5 +19,4 @@ public class ResponseListener implements EventClassListener {
         System.out.println("response event: " + Event.getText());
         response.setText(Event.getText());
     }
-
 }
