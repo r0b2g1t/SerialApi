@@ -47,7 +47,7 @@ public class SerialManager {
 
         final Thread listenerHandlerThread = new Thread(listenerHandler);
         listenerHandlerThread.start();
-        logger.wrapper.log(Level.FINEST, "ListenerHandlerThread stadted.");
+        logger.wrapper.log(Level.FINEST, "ListenerHandlerThread started.");
 
     }
 

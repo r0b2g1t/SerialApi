@@ -37,7 +37,7 @@ public class LoggerCollector {
             if(CONFIGURATION.getSystemLog().equals("true")) {
                 FileHandler systemLogFileHandler = new FileHandler(CONFIGURATION.getSystemLogPath());
                 systemLogFileHandler.setFormatter(new SimpleFormatter());
-                //systemLogFileHandler.setLevel(Level.FINE);
+                systemLogFileHandler.setLevel(Level.FINEST);
                 wrapper.addHandler(systemLogFileHandler);
             }
 
@@ -45,7 +45,7 @@ public class LoggerCollector {
             wrapper.setUseParentHandlers(false);
             wrapper.setLevel(Level.FINEST);
         } catch (IOException e){
-            wrapper.log(Level.WARNING, "File {0} unaccessible IO error", CONFIGURATION.getLogPath());
+            wrapper.log(Level.WARNING, "File {0} inaccessible IO error", CONFIGURATION.getLogPath());
             wrapper.log(Level.FINE, "Stacktrace: ", e);
         }
         instance = new LoggerCollector();
