@@ -8,21 +8,21 @@ public class Message {
     private String text;
 
     /**
-     * @param text  Set the object text value
+     * @param text  Set the object text value.
      */
     public Message(String text) {
         this.text = text;
     }
 
     /**
-     * @return      Returns text from the message object
+     * @return      the text from the message object.
      */
     public String getText() {
         return text;
     }
 
     /**
-     * @param text  Sets the text of the message object
+     * @param text  Sets the text of the message object.
      */
     public void setText(String text) {
         this.text = text;

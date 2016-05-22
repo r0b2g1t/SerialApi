@@ -47,28 +47,28 @@ public class SerialProtocol {
     }
 
     /**
-     * @return  Returns the threadID of the request.
+     * @return  the threadID of the request.
      */
     public Long getThreadID(){
         return threadID;
     }
 
     /**
-     * @return  Returns the request information.
+     * @return  the request information.
      */
     public String getRequest(){
         return request;
     }
 
     /**
-     * @return  Returns the request message.
+     * @return  the request message.
      */
     public String getResponse(){
         return response;
     }
 
     /**
-     * @return  Returns the flag witch indicat if the request synchronous(true) or asynchronous(false).
+     * @return  the flag witch indicat if the request synchronous(true) or asynchronous(false).
      */
     public Boolean getSyncFlag(){
         return syncFlag;
@@ -85,7 +85,7 @@ public class SerialProtocol {
     }
 
     /**
-     * @return  Returns all information together.
+     * @return  all information together.
      */
     public String getAll(){
         return String.valueOf(threadID) + ";" + request + ";" + response + ";" + syncFlag;

@@ -105,7 +105,7 @@ public class SerialManager {
 
     /**
      * @param data  Input data for the serial write method.
-     * @return      Returns the response of the synchronous request.
+     * @return      the response of the synchronous request.
      */
     public String syncWrite(final String data){
         String response;
@@ -183,7 +183,7 @@ public class SerialManager {
     }
 
     /**
-     * @return      Returns the response of the synchronous request.
+     * @return      the response of the synchronous request.
      */
     private String read(){
 

@@ -36,7 +36,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the port-name in the configuration.
+     * @return  the port-name in the configuration.
      */
     public String getPort()
     {
@@ -44,7 +44,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the milliseconds to wait for serial connection is up.
+     * @return  the milliseconds to wait for serial connection is up.
      */
     public Integer getTimeoutMsWaitForOpen()
     {
@@ -52,7 +52,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the symbol rate for the connection.
+     * @return  the symbol rate for the connection.
      */
     public Integer getBaudRate()
     {
@@ -60,7 +60,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the number of data bits in a character.
+     * @return  the number of data bits in a character.
      */
     public Integer getDataBits()
     {
@@ -68,7 +68,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the number of stop bits for the signaling of the end of a character.
+     * @return  the number of stop bits for the signaling of the end of a character.
      */
     public Integer getStopBits()
     {
@@ -76,7 +76,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the error detection of the transmission.
+     * @return  the error detection of the transmission.
      *                 PARITY NONE=0, ODD=1, Even=2
      */
     public Integer getParity()
@@ -85,7 +85,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the character witch indicates the end of response.
+     * @return  the character witch indicates the end of response.
      */
     public String getEndOfResponseCharacter()
     {
@@ -93,35 +93,35 @@ public class SerialConfig{
     }
 
     /**
-     * @return  Returns the tag witch indicates that the transmitted data is a notification.
+     * @return  the tag witch indicates that the transmitted data is a notification.
      */
     public String getNotificationTag(){
         return config.getProperty("NOTIFICATION_TAG");
     }
 
     /**
-     * @return  Returns the path to the logfile.
+     * @return  the path to the logfile.
      */
     public String getLogPath(){
         return config.getProperty("LOG_PATH");
     }
 
     /**
-     * @return  Returns the level of logging for the loggerWrapper.
+     * @return  the level of logging for the loggerWrapper.
      */
     public String getLogLevel(){
         return config.getProperty("LOG_LEVEL");
     }
 
     /**
-     * @return  Returns the the state of the logger true for on, false for off.
+     * @return  the the state of the logger true for on, false for off.
      */
     public String getSystemLog() {
         return config.getProperty("SYSTEM_LOG");
     }
 
     /**
-     * @return  Returns the path to the system logfile.
+     * @return  the path to the system logfile.
      */
     public String getSystemLogPath(){
         return config.getProperty("SYSTEM_LOG_PATH");
