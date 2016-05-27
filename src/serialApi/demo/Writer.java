@@ -1,4 +1,4 @@
-package serialApi;
+package serialApi.demo;
 
 import serialApi.helper.Message;
 import serialApi.listener.ResponseListener;
@@ -52,6 +52,7 @@ public class Writer implements Runnable {
                 System.out.println("Response in writerThread: " + response.getText());
                 System.out.println("Response in writerThread all: " + responseAll.getText());
                 System.out.println("Notification in writerThread: " + notification.getText());
+                SerialMgm.removeResponseListener(notificationListener);
                 //SerialMgm.removeResponseListener(responseListener);
                 /*if(!request.equals(null)) {
                     SerialMgm.removeResponseListener(responseListener);

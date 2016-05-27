@@ -1,4 +1,4 @@
-package serialApi;
+package serialApi.demo;
 
 import serialApi.serial.SerialConfig;
 import serialApi.serial.SerialManager;
@@ -21,6 +21,10 @@ public class TestClass {
         String file = "/Users/robert/IdeaProjects/SerialApi/src/serialApi/serial/serial.properties";
 
         SerialConfig CONFIGURATION = new SerialConfig(file);
+
+        for( int i=0; i <= CONFIGURATION.getResponseRegEx().size()-1; i++){
+            System.out.println(CONFIGURATION.getResponseRegEx().get(i));
+        }
 
         // Set the COM-Port
         CONFIGURATION.setPort("/dev/cu.wchusbserial1420");

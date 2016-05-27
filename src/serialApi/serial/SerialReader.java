@@ -15,6 +15,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SerialReader implements SerialPortEventListener{
 
@@ -60,8 +62,7 @@ public class SerialReader implements SerialPortEventListener{
             if( serialEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE )
             {
                 logger.wrapper.log(Level.FINE, "Serial input data available.");
-                String response = "";
-                String responsePats[];
+                String response;
                 SerialProtocol responseElement = new SerialProtocol(null, null);
 
                 try {
@@ -72,63 +73,27 @@ public class SerialReader implements SerialPortEventListener{
                         responseBuilder = new String(readBuffer, 0, availableBytes);
                     }
                     logger.wrapper.log(Level.FINEST, "Read data {0}.", responseBuilder);
+
                 } catch (IOException e) {
                     logger.wrapper.log(Level.WARNING, "Unable to read response from input stream.");
                     logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
                 }
 
-                // response building and check for end character
-                if(responseBuilder.contains(CONFIGURATION.getEndOfResponseCharacter())){
-                    responsePats = responseBuilder.split(CONFIGURATION.getEndOfResponseCharacter());
-                    response = responseCache + responsePats[0];
-                    responseCache = "";
-                    if(responsePats.length > 1) {
-                        for (int i = 1; i <= responsePats.length - 1; i++) {
-                            responseCache = responsePats[i] + CONFIGURATION.getEndOfResponseCharacter();
-                        }
-                        logger.wrapper.log(Level.FINEST, "Response trash: {0} is dropped.", responseCache);
-                        System.out.println("Multiple response received trash-> " + responseCache);
-                        responseCache="";
-                    }
-                }else {
-                    // Response caching to responseCache for buildup
-                    logger.wrapper.log(Level.FINEST,
-                                        "No end of response found add {0} to responseCache {1}.",
-                                        new Object[]{responseBuilder, responseCache});
+                /**
+                 * Response pattern check
+                 */
 
-                    if(!responseCache.equals("")) {
-                        responseCache += responseBuilder;
-                    }else{
-                        responseCache = responseBuilder;
-                    }
-                }
+                for(Pattern p : CONFIGURATION.getResponseRegEx()) {
+                    Matcher responseMatcher = p.matcher(responseCache + responseBuilder).reset();
 
-                if(!response.equals("")) {
-                    if (response.contains(CONFIGURATION.getNotificationTag())) {
-                        responseElement.flush();
-                        responseElement.setThreadID(0L);
-                        responseElement.setResponse(response.replace("!", ""));
-                        responseElement.setSyncFlag(false);
-
-                        try {
-                            responseQueueMap.get(0L).add(responseElement);
-                            logger.wrapper.log(Level.FINEST,
-                                                "Notification {0} add to the notification queue.",
-                                                responseElement.getAll());
-
-                        }catch(NullPointerException e){
-                            logger.wrapper.log(Level.WARNING, "Unable to add notification to the queue.");
-                            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
-                        }
-
-                    } else {
+                    while (responseMatcher.find()){
+                        response = responseMatcher.group();
                         transferElement.setResponse(response);
                         System.out.println("Response element total: "
                                 + transferElement.getThreadID()
                                 + ";" + transferElement.getRequest()
                                 + ";" + transferElement.getResponse()
                                 + ";" + transferElement.getSyncFlag());
-
                         responseElement.setThreadID(transferElement.getThreadID());
                         responseElement.setRequest(transferElement.getRequest());
                         responseElement.setResponse(transferElement.getResponse());
@@ -139,20 +104,56 @@ public class SerialReader implements SerialPortEventListener{
                             logger.wrapper.log(Level.FINEST,
                                     "Response {0} add to the response queue for threadID {1}.",
                                     new Object[]{responseElement.getAll(),
-                                                 responseElement.getThreadID()});
+                                            responseElement.getThreadID()});
 
                         } catch (NullPointerException e){
                             logger.wrapper.log(Level.WARNING,
-                                                "Unable to add response for thread{0} to queue.",
-                                                transferElement.getThreadID());
-
+                                    "Unable to add response for thread{0} to queue.",
+                                    transferElement.getThreadID());
                             logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
                         }
+
+                        // resetting variables
                         transferElement.flush();
+                        responseCache = "";
+                        responseBuilder = "";
+                        sendSignal.getAndDecrement();
                     }
-                    responseCache="";
-                    sendSignal.getAndDecrement();
                 }
+
+                /**
+                 * Notification pattern chack
+                 */
+
+                Matcher notificationMatcher = CONFIGURATION.getNotificationPattern()
+                        .matcher(responseCache + responseBuilder)
+                        .reset();
+
+                while (notificationMatcher.find()){
+                    String notification;
+                    notification = notificationMatcher.group();
+                    responseElement.flush();
+                    responseElement.setThreadID(0L);
+                    responseElement.setResponse(notification);
+                    responseElement.setSyncFlag(false);
+                    try {
+                        responseQueueMap.get(0L).add(responseElement);
+                        logger.wrapper.log(Level.FINEST,
+                                "Notification {0} add to the notification queue.",
+                                responseElement.getAll());
+                    }catch(NullPointerException e){
+                        logger.wrapper.log(Level.WARNING, "Unable to add notification to the queue.");
+                        logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+                    }
+                }
+
+                // Collect input data
+                if(!responseCache.equals("")) {
+                    responseCache += responseBuilder;
+                }else{
+                    responseCache = responseBuilder;
+                }
+
             }
         }catch( Exception e ){
             logger.wrapper.log(Level.WARNING, "An error occurred by response reading.");

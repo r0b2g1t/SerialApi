@@ -1,7 +1,10 @@
 package serialApi.serial;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * Created by robert on 21.04.16.
@@ -9,9 +12,10 @@ import java.util.Properties;
 public class SerialConfig{
 
     private final Properties config;
+    private final List <Pattern> responsePatternList = new ArrayList<>();
 
     /**
-     * @param file Properties file input String
+     * @param file      Properties file input String
      */
     public SerialConfig (String file) {
 
@@ -33,10 +37,11 @@ public class SerialConfig{
      */
     private SerialConfig() {
         config = new Properties();
+
     }
 
     /**
-     * @return  the port-name in the configuration.
+     * @return String           The port-name if the serial device in the configuration.
      */
     public String getPort()
     {
@@ -44,7 +49,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  the milliseconds to wait for serial connection is up.
+     * @return Integer          The milliseconds to wait for serial connection is up.
      */
     public Integer getTimeoutMsWaitForOpen()
     {
@@ -52,7 +57,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  the symbol rate for the connection.
+     * @return Integer          The symbol rate for the connection.
      */
     public Integer getBaudRate()
     {
@@ -60,7 +65,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  the number of data bits in a character.
+     * @return Integer          The number of data bits in a character.
      */
     public Integer getDataBits()
     {
@@ -68,7 +73,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  the number of stop bits for the signaling of the end of a character.
+     * @return Integer          The number of stop bits for the signaling of the end of a character.
      */
     public Integer getStopBits()
     {
@@ -76,8 +81,8 @@ public class SerialConfig{
     }
 
     /**
-     * @return  the error detection of the transmission.
-     *                 PARITY NONE=0, ODD=1, Even=2
+     * @return Integer          The error detection of the transmission.
+     *                          PARITY NONE=0, ODD=1, Even=2
      */
     public Integer getParity()
     {
@@ -85,7 +90,7 @@ public class SerialConfig{
     }
 
     /**
-     * @return  the character witch indicates the end of response.
+     * @return String           The character witch indicates the end of response.
      */
     public String getEndOfResponseCharacter()
     {
@@ -93,40 +98,54 @@ public class SerialConfig{
     }
 
     /**
-     * @return  the tag witch indicates that the transmitted data is a notification.
+     * @return Pattern          The tag witch indicates that the transmitted data is a notification.
      */
-    public String getNotificationTag(){
-        return config.getProperty("NOTIFICATION_TAG");
+    public Pattern getNotificationPattern(){
+        return Pattern.compile(config.getProperty("NOTIFICATION_TAG"));
     }
 
     /**
-     * @return  the path to the logfile.
+     * @return String           The path to the logfile.
      */
     public String getLogPath(){
         return config.getProperty("LOG_PATH");
     }
 
     /**
-     * @return  the level of logging for the loggerWrapper.
+     * @return String           The level of logging for the loggerWrapper.
      */
     public String getLogLevel(){
         return config.getProperty("LOG_LEVEL");
     }
 
     /**
-     * @return  the the state of the logger true for on, false for off.
+     * @return String           The state of the logger true for on, false for off.
      */
     public String getSystemLog() {
         return config.getProperty("SYSTEM_LOG");
     }
 
     /**
-     * @return  the path to the system logfile.
+     * @return String           The path to the system logfile.
      */
     public String getSystemLogPath(){
         return config.getProperty("SYSTEM_LOG_PATH");
     }
 
+    /**
+     * @return List&lt;Pattern&gt;    A list of patterns for the response parsing from response input data.
+     */
+    public List<Pattern> getResponseRegEx(){
+
+        if(responsePatternList.isEmpty()){
+            for(int i=0; config.containsKey("REG_EX" + Integer.toString(i)); i++){
+                responsePatternList.add(Pattern.compile(config.getProperty("REG_EX" + Integer.toString(i))));
+            }
+            return responsePatternList;
+        }else {
+            return responsePatternList;
+        }
+    }
 
     /**
      *
@@ -195,7 +214,7 @@ public class SerialConfig{
     /**
      * @param notificationTag   Sets the tag witch indicates that the transmitted data is a notification.
      */
-    public void setNotificationTag(String notificationTag){
+    public void setNotificationPattern(String notificationTag){
         config.setProperty("NOTIFICATION_TAG", notificationTag);
     }
 
@@ -225,5 +244,12 @@ public class SerialConfig{
      */
     public void setSystemLogPath(String systemLogPath){
         config.setProperty("SYSTEM_LOG_PATH", systemLogPath);
+    }
+
+    /**
+     * @param responsePattern   Add the string to response pattern-list.
+     */
+    public void addRepsonsePattern(String responsePattern){
+        responsePatternList.add(Pattern.compile(responsePattern));
     }
 }
