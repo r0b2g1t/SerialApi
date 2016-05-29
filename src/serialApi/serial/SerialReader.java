@@ -122,7 +122,7 @@ public class SerialReader implements SerialPortEventListener{
                 }
 
                 /**
-                 * Notification pattern chack
+                 * Notification pattern check
                  */
 
                 Matcher notificationMatcher = CONFIGURATION.getNotificationPattern()

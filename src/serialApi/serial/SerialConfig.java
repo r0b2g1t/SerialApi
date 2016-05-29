@@ -249,7 +249,7 @@ public class SerialConfig{
     /**
      * @param responsePattern   Add the string to response pattern-list.
      */
-    public void addRepsonsePattern(String responsePattern){
+    public void addResponsePattern(String responsePattern){
         responsePatternList.add(Pattern.compile(responsePattern));
     }
 }
