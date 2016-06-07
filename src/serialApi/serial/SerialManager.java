@@ -245,7 +245,7 @@ public class SerialManager {
     }
 
     /**
-     * @param listener  Listener object for the thread with the ID "threadID" witch will be added.
+     * @param listener  Listener object for notification receiving witch will be added.
      */
     public synchronized void addNotificationListener(ResponseListener listener){
         addResponseListener(listener, 0L);
@@ -253,7 +253,7 @@ public class SerialManager {
     }
 
     /**
-     * @param listener  Listener object for the thread with the ID "threadID" witch will be removed.
+     * @param listener  Listener object for notification receiving witch will be removed.
      */
     public synchronized void removeNotificationListener(ResponseListener listener){
         removeResponseListener(listener);
