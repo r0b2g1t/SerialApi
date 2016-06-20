@@ -16,6 +16,8 @@ public class Writer implements Runnable {
     private ResponseListener responseListenerAll;
     private ResponseListener notificationListener;
 
+    private boolean running = true;
+
     private final Message response;
     private final Message responseAll;
     private final Message notification;
@@ -40,15 +42,16 @@ public class Writer implements Runnable {
         SerialMgm.addResponseListener(responseListener, Thread.currentThread().getId());
         SerialMgm.addResponseListener(responseListenerAll, Long.parseLong("all", 36));
         SerialMgm.addNotificationListener(notificationListener);
+
+        System.out.println("ThreadID: " + Thread.currentThread().getId());
         //SerialMgm.addResponseListener(responseListener, Long.valueOf("1"));
 
-        while(true){
+        while(running){
             String request;
             try{
                 request = inputQueue.take();
-                Thread.sleep(1500);
                 SerialMgm.write(request);
-                Thread.sleep(1500);
+                Thread.sleep(1800);
                 System.out.println("Response in writerThread: " + response.getText());
                 System.out.println("Response in writerThread all: " + responseAll.getText());
                 System.out.println("Notification in writerThread: " + notification.getText());
@@ -67,5 +70,10 @@ public class Writer implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+    public void terminate()
+    {
+        running = false;
+        System.out.println("Thread terminating!!!!!");
     }
 }

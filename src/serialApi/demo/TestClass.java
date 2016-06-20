@@ -22,10 +22,6 @@ public class TestClass {
 
         SerialConfig CONFIGURATION = new SerialConfig(file);
 
-        for( int i=0; i <= CONFIGURATION.getResponseRegEx().size()-1; i++){
-            System.out.println(CONFIGURATION.getResponseRegEx().get(i));
-        }
-
         // Set the COM-Port
         CONFIGURATION.setPort("/dev/cu.wchusbserial1420");
 
@@ -37,7 +33,7 @@ public class TestClass {
         inputQueue.add("1");
         inputQueue.add("0");
         inputQueue.add("1");
-        inputQueue.add("0");
+        /*inputQueue.add("0");
         /*inputQueue.add("1");
         inputQueue.add("0");*/
 
@@ -47,7 +43,32 @@ public class TestClass {
         writerThread.start();
 
         // Synchronous writing
+
+        writer.terminate();
+        writerThread.interrupt();
+
+
+
+        SyncWriter syncWriter = new SyncWriter(SerialMgm);
+        final Thread syncWriterThread = new Thread(syncWriter);
+
+        syncWriterThread.start();
+
         //System.out.println("Write sync:");
-        //System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("1"));
+        System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("0"));
+
+        ThreadGroup currentGroup = Thread.currentThread().getThreadGroup();
+        int noThreads = currentGroup.activeCount();
+        Thread[] lstThreads = new Thread[noThreads];
+        currentGroup.enumerate(lstThreads);
+        for (int i = 0; i < noThreads; i++)
+            System.out.println("Thread No:" + i + " (ID:" + lstThreads[i].getId() + ") = "
+                    + lstThreads[i].getName());
+
+        try{
+            SerialMgm.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

@@ -12,11 +12,10 @@ public class ResponseListener implements EventClassListener {
     }
 
     /**
-     * @param Event Is the event-object witch receives the response message
+     * @param event Is the event-object witch receives the response message
      */
     @Override
-    public void responseArrived(Message Event){
-        System.out.println("response event: " + Event.getText());
-        response.setText(Event.getText());
+    public void responseArrived(Message event){
+        response.setText(event.getText());
     }
 }

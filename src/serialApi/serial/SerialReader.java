@@ -89,11 +89,6 @@ public class SerialReader implements SerialPortEventListener{
                     while (responseMatcher.find()){
                         response = responseMatcher.group();
                         transferElement.setResponse(response);
-                        System.out.println("Response element total: "
-                                + transferElement.getThreadID()
-                                + ";" + transferElement.getRequest()
-                                + ";" + transferElement.getResponse()
-                                + ";" + transferElement.getSyncFlag());
                         responseElement.setThreadID(transferElement.getThreadID());
                         responseElement.setRequest(transferElement.getRequest());
                         responseElement.setResponse(transferElement.getResponse());

@@ -42,6 +42,11 @@ public class SerialOutputProcessing implements Runnable{
 
     public void run()
     {
+        try{
+            Thread.sleep(1500);
+        } catch (Exception e){
+            logger.wrapper.log(Level.WARNING, "Can not set SerialOutputProcessing thread set to sleep for initialisation.");
+        }
         while( true )
         {
             SerialProtocol request;
@@ -53,10 +58,6 @@ public class SerialOutputProcessing implements Runnable{
                     transferElement.setThreadID(request.getThreadID());
                     transferElement.setRequest(request.getRequest());
                     transferElement.setSyncFlag(request.getSyncFlag());
-
-                    System.out.println("Taken and writing request: " + transferElement.getRequest() +
-                            " sync: " + transferElement.getSyncFlag() +
-                            ", from thread: " + transferElement.getThreadID());
 
                     try {
                         SERIAL_OUT.write(transferElement.getRequest().getBytes());

@@ -4,6 +4,7 @@ package serialApi.serial;
  * Created by robert on 21.04.16.
  */
 
+import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
 import gnu.io.*;
 import serialApi.helper.LoggerCollector;
 import serialApi.helper.SerialProtocol;
@@ -67,8 +68,9 @@ public class SerialConnection
                 commPort = portIdentifier.open(this.getClass().getName(), CONFIGURATION.getTimeoutMsWaitForOpen());
                 logger.wrapper.log(Level.FINEST, "Connection to port {0} established.", CONFIGURATION.getPort());
             } catch (PortInUseException e){
-                logger.wrapper.log(Level.SEVERE, "Port {0} is in use.", CONFIGURATION.getPort());
+                logger.wrapper.log(Level.SEVERE, "Port {0} is in use. Stop Application.", CONFIGURATION.getPort());
                 logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+                System.exit( 1 );
             }
 
             if ( commPort instanceof SerialPort )

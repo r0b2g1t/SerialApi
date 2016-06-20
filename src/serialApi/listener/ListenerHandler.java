@@ -55,7 +55,8 @@ public class ListenerHandler implements Runnable {
 
                         if(response.getSyncFlag().equals(true)) {
                             responseSyncQueueMap.get(key).add(response);
-                        }else {
+                        }
+                        if(responderListenerListMap.get(response.getThreadID()) != null) {
                             listeners = responderListenerListMap.get(response.getThreadID());
 
                             if(listeners == null){
@@ -73,8 +74,8 @@ public class ListenerHandler implements Runnable {
                                         new Object[]{responseMessage.getText(), i});
                             }
 
-                            if(!(responderListenerListMap.get(Long.parseLong("all", 36)) == null)){
-                                listeners = responderListenerListMap.get(Long.parseLong("all", 36));
+                            if(responderListenerListMap.get(-1L) != null){
+                                listeners = responderListenerListMap.get(-1L);
                                 Iterator iAll = listeners.iterator();
 
                                 // triggers all listeners witch are registrated

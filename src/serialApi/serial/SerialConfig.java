@@ -27,6 +27,7 @@ public class SerialConfig{
             fileInputStream.close();
 
         }catch( Exception ioe ){
+            System.out.println("Can not read configuration-file: " + file);
             ioe.printStackTrace();
             System.exit( 1 );
         }
@@ -87,14 +88,6 @@ public class SerialConfig{
     public Integer getParity()
     {
         return Integer.parseInt( config.getProperty("SERIAL_PARITY"));
-    }
-
-    /**
-     * @return String           The character witch indicates the end of response.
-     */
-    public String getEndOfResponseCharacter()
-    {
-        return config.getProperty("RESPONSE_END");
     }
 
     /**
@@ -201,14 +194,6 @@ public class SerialConfig{
     public void setParity(Integer parity)
     {
         config.setProperty("SERIAL_PARITY", parity.toString());
-    }
-
-    /**
-     * @param endOfResponse Sets the character witch indicates the end of response.
-     */
-    public void setEndOfResponseCharacter(String endOfResponse)
-    {
-        config.setProperty("RESPONSE_END", endOfResponse);
     }
 
     /**

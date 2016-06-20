@@ -7,6 +7,7 @@ import serialApi.listener.ListenerHandler;
 import serialApi.listener.ResponseListener;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,7 +24,7 @@ public class SerialManager {
     private static ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap;
     private static ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseSyncQueueMap;
     private static ConcurrentHashMap<Long, ArrayList<ResponseListener>> responderListenerListMap;
-    private static ConcurrentHashMap<EventClassListener, Long> listenerThreadMap;
+    private static ConcurrentHashMap<EventClassListener, ArrayList<Long>> listenerThreadMap;
     private static SerialConnection serialConn;
 
     /**
@@ -111,8 +112,6 @@ public class SerialManager {
         String response;
         Long threadID = Thread.currentThread().getId();
 
-        System.out.println("ThreadID in syncWrite: " + threadID);
-
         SerialProtocol transferElement = new SerialProtocol(null, null);
         transferElement.setThreadID(Thread.currentThread().getId());
         transferElement.setRequest(data);
@@ -161,7 +160,6 @@ public class SerialManager {
         transferElement.setRequest(data);
         transferElement.setSyncFlag(false);
 
-        System.out.println("ThreadID in write method: " + threadID);
         try{
             if(!responseQueueMap.containsKey(threadID)) {
                 responseQueueMap.put(threadID, new LinkedBlockingQueue<>());
@@ -188,13 +186,11 @@ public class SerialManager {
     private String read(){
 
         Long threadID = Thread.currentThread().getId();
-        System.out.println("ThreadID in read: " + threadID);
         try{
             SerialProtocol responseElement;
             logger.wrapper.log(Level.FINEST, "Poll from response queue starts.");
             responseElement = responseSyncQueueMap.get(threadID).poll(10, TimeUnit.SECONDS);
             logger.wrapper.log(Level.FINEST, "Response {0} received in read method.", responseElement.getAll());
-            System.out.println( "Response: " + responseElement.getAll());
             return responseElement.getResponse();
         } catch (InterruptedException e) {
             logger.wrapper.log(Level.WARNING, "No response received.");
@@ -212,6 +208,7 @@ public class SerialManager {
             try {
                 logger.wrapper.log(Level.FINEST, "No listener array for thread {0} exists.", threadID);
                 responderListenerListMap.put(threadID, new ArrayList<>());
+                listenerThreadMap.put(listener, new ArrayList<>());
                 logger.wrapper.log(Level.FINEST, "Listener array for thread {0} added.", threadID);
             }catch (Exception e){
                 logger.wrapper.log(Level.WARNING, "Unable to add responseListener for the thread {0}.", threadID );
@@ -219,7 +216,7 @@ public class SerialManager {
             }
         }
         try {
-            listenerThreadMap.put(listener, threadID);
+            listenerThreadMap.get(listener).add(threadID);
             responderListenerListMap.get(threadID).add(listener);
             logger.wrapper.log(Level.FINEST, "Listener {0} for thread {1} added.", new Object[]{listener,threadID});
         } catch(Exception e){
@@ -233,10 +230,16 @@ public class SerialManager {
      */
     public synchronized void removeResponseListener(ResponseListener listener){
         try {
-            long threadID = listenerThreadMap.get(listener);
-            responderListenerListMap.get(listenerThreadMap.get(listener)).remove(listener);
+            ArrayList  listenerThreads;
+            listenerThreads = listenerThreadMap.get(listener);
+
+            Iterator threadID = listenerThreads.iterator();
+            while (threadID.hasNext()) {
+                responderListenerListMap.get(threadID.next()).remove(listener);
+
+                logger.wrapper.log(Level.FINEST, "Listener {0} for thread {1} is removed.", new Object[]{listener, threadID});
+            }
             listenerThreadMap.remove(listener);
-            logger.wrapper.log(Level.FINEST, "Listener {0} for thread {1} is removed.", new Object[]{listener,threadID});
         } catch(Exception e){
             logger.wrapper.log(Level.WARNING, "Unable to remove listener for thread {0}",
                     listenerThreadMap.get(listener));
