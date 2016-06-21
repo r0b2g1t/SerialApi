@@ -37,18 +37,17 @@ public class TestClass {
         /*inputQueue.add("1");
         inputQueue.add("0");*/
 
+        MessageReceiver receiver = new MessageReceiver(SerialMgm);
+        final Thread receiverThread = new Thread(receiver);
+
+        receiverThread.start();
+
         Writer writer = new Writer(inputQueue, SerialMgm);
         final Thread writerThread = new Thread(writer);
 
         writerThread.start();
 
         // Synchronous writing
-
-        writer.terminate();
-        writerThread.interrupt();
-
-
-
         SyncWriter syncWriter = new SyncWriter(SerialMgm);
         final Thread syncWriterThread = new Thread(syncWriter);
 
@@ -57,18 +56,10 @@ public class TestClass {
         //System.out.println("Write sync:");
         System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("0"));
 
-        ThreadGroup currentGroup = Thread.currentThread().getThreadGroup();
-        int noThreads = currentGroup.activeCount();
-        Thread[] lstThreads = new Thread[noThreads];
-        currentGroup.enumerate(lstThreads);
-        for (int i = 0; i < noThreads; i++)
-            System.out.println("Thread No:" + i + " (ID:" + lstThreads[i].getId() + ") = "
-                    + lstThreads[i].getName());
-
-        try{
+        /*try{
             SerialMgm.close();
         }catch (Exception e){
             e.printStackTrace();
-        }
+        }*/
     }
 }
