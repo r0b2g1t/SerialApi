@@ -9,7 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by robert on 22.04.16.
  */
-public class TestClass {
+public class Tester {
 
     private static serialApi.serial.SerialManager SerialMgm;
 
