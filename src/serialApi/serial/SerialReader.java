@@ -11,8 +11,7 @@ import serialApi.helper.SerialProtocol;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -23,7 +22,7 @@ public class SerialReader implements SerialPortEventListener{
     private static LoggerCollector logger;
 
     private final InputStream inputStream;
-    private final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap;
+    private final LinkedBlockingQueue<SerialProtocol> serialInputQueue;
     private final SerialProtocol transferElement;
     private final SerialConfig CONFIGURATION;
     private final AtomicInteger sendSignal;
@@ -35,17 +34,17 @@ public class SerialReader implements SerialPortEventListener{
     /**
      * @param CONFIGURATION     Holds the port-configuration-parameters.
      * @param inputStream       InputStream for handling the available data
-     * @param responseQueueMap  HashMap witch handle the response queues for every separate thread
-     * @param transferElement   Shared object witch carry the information of the last written request to the device
+     * @param serialInputQueue  response queue for response transmission from SerialReader to ListenerHandler.
+     * @param transferElement   Shared object witch carry the information of the last written request to the device.
      * @param sendSignal        Signal object indicat the possibility to send request to device.
      */
     public SerialReader(SerialConfig CONFIGURATION, InputStream inputStream,
-                        ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap,
+                        LinkedBlockingQueue<SerialProtocol> serialInputQueue,
                         SerialProtocol transferElement, AtomicInteger sendSignal)
     {
         this.CONFIGURATION = CONFIGURATION;
         this.inputStream = inputStream;
-        this.responseQueueMap = responseQueueMap;
+        this.serialInputQueue = serialInputQueue;
         this.transferElement = transferElement;
         this.sendSignal = sendSignal;
 
@@ -54,7 +53,7 @@ public class SerialReader implements SerialPortEventListener{
     }
 
     /**
-     * @param serialEvent   SerialEvent object for data input handling
+     * @param serialEvent   SerialEvent object for data input handling.
      */
     public void serialEvent( SerialPortEvent serialEvent )
     {
@@ -95,7 +94,7 @@ public class SerialReader implements SerialPortEventListener{
                         responseElement.setSyncFlag(transferElement.getSyncFlag());
 
                         try {
-                            responseQueueMap.get(transferElement.getThreadID()).add(responseElement);
+                            serialInputQueue.add(responseElement);
                             logger.wrapper.log(Level.FINEST,
                                     "Response {0} add to the response queue for threadID {1}.",
                                     new Object[]{responseElement.getAll(),
@@ -132,7 +131,7 @@ public class SerialReader implements SerialPortEventListener{
                     responseElement.setResponse(notification);
                     responseElement.setSyncFlag(false);
                     try {
-                        responseQueueMap.get(0L).add(responseElement);
+                        serialInputQueue.add(responseElement);
                         logger.wrapper.log(Level.FINEST,
                                 "Notification {0} add to the notification queue.",
                                 responseElement.getAll());

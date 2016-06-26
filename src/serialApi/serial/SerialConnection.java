@@ -4,14 +4,12 @@ package serialApi.serial;
  * Created by robert on 21.04.16.
  */
 
-import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
 import gnu.io.*;
+import serialApi.exceptions.UnableToConnectException;
 import serialApi.helper.LoggerCollector;
 import serialApi.helper.SerialProtocol;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -42,12 +40,12 @@ public class SerialConnection
 
 
     /**
-     * @param SERIAL_OUTPUT_QUEUE   request queue for all thread.
-     * @param responseQueueMap      HashMap witch handle the response queues for every separate thread.
+     * @param serialOutputQueue     Request queue for all thread.
+     * @param serialInputQueue      Response queue for response transmission from SerialReader to ListenerHandler.
      * @throws Exception            Throws Exceptions if necessary.
      */
-    public void connect(final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE,
-                        final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap)
+    public void connect(final LinkedBlockingQueue<SerialProtocol> serialOutputQueue,
+                        final LinkedBlockingQueue<SerialProtocol> serialInputQueue)
             throws Exception
     {
         sendSignal.set(0);
@@ -70,7 +68,7 @@ public class SerialConnection
             } catch (PortInUseException e){
                 logger.wrapper.log(Level.SEVERE, "Port {0} is in use. Stop Application.", CONFIGURATION.getPort());
                 logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
-                System.exit( 1 );
+                throw (new UnableToConnectException());
             }
 
             if ( commPort instanceof SerialPort )
@@ -91,7 +89,7 @@ public class SerialConnection
                     serialPort.addEventListener(
                             new SerialReader(CONFIGURATION,
                                     serialPort.getInputStream(),
-                                    responseQueueMap,
+                                    serialInputQueue,
                                     transferElement,
                                     sendSignal));
                     logger.wrapper.log(Level.FINEST, "Serial port event listener added.");
@@ -101,7 +99,7 @@ public class SerialConnection
                 }
                 try {
                     this.serialOutputProcessor =
-                            new SerialOutputProcessing(SERIAL_OUTPUT_QUEUE,
+                            new SerialOutputProcessing(serialOutputQueue,
                                     serialPort.getOutputStream(),
                                     transferElement,
                                     sendSignal);
@@ -129,6 +127,7 @@ public class SerialConnection
     {
         try{
             serialPort.getOutputStream().close();
+            serialPort.getInputStream().close();
             serialPort.removeEventListener();
             serialOutputProcessor.terminate();
             serialPort.close();

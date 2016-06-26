@@ -1,5 +1,7 @@
 package serialApi.serial;
 
+import serialApi.exceptions.NoSyncResponseException;
+import serialApi.exceptions.UnableToConnectException;
 import serialApi.helper.LoggerCollector;
 import serialApi.helper.SerialProtocol;
 import serialApi.listener.EventClassListener;
@@ -20,11 +22,13 @@ import java.util.logging.Level;
 public class SerialManager {
     private static LoggerCollector logger;
     private static SerialConfig CONFIGURATION;
-    private static LinkedBlockingQueue<SerialProtocol> SerialOutputQueue;
-    private static ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap;
+    private static LinkedBlockingQueue<SerialProtocol> serialOutputQueue;
+    private static LinkedBlockingQueue<SerialProtocol> serialInputQueue;
+
     private static ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseSyncQueueMap;
     private static ConcurrentHashMap<Long, ArrayList<ResponseListener>> responderListenerListMap;
     private static ConcurrentHashMap<EventClassListener, ArrayList<Long>> listenerThreadMap;
+
     private static SerialConnection serialConn;
 
     /**
@@ -35,14 +39,17 @@ public class SerialManager {
 
         SerialManager.CONFIGURATION = CONFIGURATION;
         logger = new LoggerCollector().prepare(CONFIGURATION);
-        SerialOutputQueue = new LinkedBlockingQueue<>();
-        responseQueueMap = new ConcurrentHashMap<>();
+
+        serialOutputQueue = new LinkedBlockingQueue<>();
+        serialInputQueue = new LinkedBlockingQueue<>();
+
         responseSyncQueueMap = new ConcurrentHashMap<>();
         responderListenerListMap = new ConcurrentHashMap<>();
         listenerThreadMap = new ConcurrentHashMap<>();
+
         serialConn = new SerialConnection(CONFIGURATION);
 
-        ListenerHandler listenerHandler = new ListenerHandler(responseQueueMap,
+        ListenerHandler listenerHandler = new ListenerHandler(serialInputQueue,
                                                               responseSyncQueueMap,
                                                               responderListenerListMap);
 
@@ -55,31 +62,17 @@ public class SerialManager {
     /**
      * Initial the connection to the serial device by using the rxtx-library.
      */
-    public void init(){
+    public void init() throws Exception{
         try {
-            serialConn.connect(SerialOutputQueue,
-                                responseQueueMap);
-            // short delay for serial connection initialisation
-            //Thread.sleep(1500);
+            serialConn.connect(serialOutputQueue,
+                                serialInputQueue);
+
         } catch (Exception e) {
             logger.wrapper.log(Level.SEVERE, "Unable to initialize the connection.");
             logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
-            System.exit( 1 );
+            throw(new UnableToConnectException());
         }
         logger.wrapper.log(Level.FINEST, "Connection established.");
-
-        /**
-         * Creates the notification queue by using the threadID 0.
-         */
-        try {
-            if(!responseQueueMap.containsKey(0L)) {
-                responseQueueMap.put(0L, new LinkedBlockingQueue<>());
-                logger.wrapper.log(Level.FINEST, "Notification queue added.");
-            }
-        }catch (Exception e){
-            logger.wrapper.log(Level.SEVERE, "Unable to initialize the notification queue.");
-            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
-        }
     }
 
     /**
@@ -88,7 +81,7 @@ public class SerialManager {
     public void reconnect(){
         try {
             serialConn.close();
-            serialConn.connect(SerialOutputQueue, responseQueueMap);
+            serialConn.connect(serialOutputQueue, serialInputQueue);
             logger.wrapper.log(Level.FINEST, "Reconnect complete.");
         } catch (Exception e) {
             logger.wrapper.log(Level.SEVERE, "Unable to reconnect the serial port {0}", CONFIGURATION.getPort());
@@ -100,7 +93,7 @@ public class SerialManager {
     /**
      * Closing the connection to the serial device.
      */
-    public void close(){
+    public synchronized void close(){
         serialConn.close();
     }
 
@@ -108,7 +101,7 @@ public class SerialManager {
      * @param data  Input data for the serial write method.
      * @return      the response of the synchronous request.
      */
-    public String syncWrite(final String data){
+    public String syncWrite(final String data) throws NoSyncResponseException {
         String response;
         Long threadID = Thread.currentThread().getId();
 
@@ -116,15 +109,7 @@ public class SerialManager {
         transferElement.setThreadID(Thread.currentThread().getId());
         transferElement.setRequest(data);
         transferElement.setSyncFlag(true);
-        try {
-            if (!responseQueueMap.containsKey(threadID)) {
-                responseQueueMap.put(threadID, new LinkedBlockingQueue<>());
-            }
-        }catch (Exception e) {
-            logger.wrapper.log(Level.SEVERE, "Unable to initialize the response queue for the thread {0}",
-                                threadID);
-            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
-        }
+
         try {
             if (!responseSyncQueueMap.containsKey(threadID)) {
                 responseSyncQueueMap.put(threadID, new LinkedBlockingQueue<>());
@@ -135,7 +120,7 @@ public class SerialManager {
             logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
         }
         try {
-            SerialOutputQueue.add(transferElement);
+            serialOutputQueue.add(transferElement);
             logger.wrapper.log(Level.FINEST, "Request {0} added to SerialOutputQueue.", transferElement.getAll());
 
         }catch (Exception e){
@@ -144,8 +129,12 @@ public class SerialManager {
             logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
         }
         response = read();
-        logger.wrapper.log(Level.FINEST, "Response {0} read in syncWrite", response);
-        return response;
+        if(response != null) {
+            logger.wrapper.log(Level.FINEST, "Response {0} read in syncWrite", response);
+            return response;
+        } else {
+            throw(new NoSyncResponseException());
+        }
     }
 
     /**
@@ -153,24 +142,13 @@ public class SerialManager {
      */
     public void write(final String data){
 
-        Long threadID = Thread.currentThread().getId();
-
         SerialProtocol transferElement = new SerialProtocol(null, null);
         transferElement.setThreadID(Thread.currentThread().getId());
         transferElement.setRequest(data);
         transferElement.setSyncFlag(false);
 
-        try{
-            if(!responseQueueMap.containsKey(threadID)) {
-                responseQueueMap.put(threadID, new LinkedBlockingQueue<>());
-            }
-        }catch (Exception e){
-            logger.wrapper.log(Level.SEVERE, "Unable to initialize the asynchronous response queue for the thread {0}",
-                    threadID);
-            logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
-        }
         try {
-            SerialOutputQueue.add(transferElement);
+            serialOutputQueue.add(transferElement);
             logger.wrapper.log(Level.FINEST, "Asynchronous request {0} added to SerialOutputQueue.",
                     transferElement.getAll());
         }catch (Exception e){
@@ -189,13 +167,18 @@ public class SerialManager {
         try{
             SerialProtocol responseElement;
             logger.wrapper.log(Level.FINEST, "Poll from response queue starts.");
-            responseElement = responseSyncQueueMap.get(threadID).poll(10, TimeUnit.SECONDS);
-            logger.wrapper.log(Level.FINEST, "Response {0} received in read method.", responseElement.getAll());
-            return responseElement.getResponse();
+            responseElement = responseSyncQueueMap.get(threadID).poll(CONFIGURATION.getSyncResponseTimeout(),
+                                                                      TimeUnit.MILLISECONDS);
+            if(responseElement != null) {
+                logger.wrapper.log(Level.FINEST, "Response {0} received in read method.", responseElement.getAll());
+                return responseElement.getResponse();
+            }
         } catch (InterruptedException e) {
             logger.wrapper.log(Level.WARNING, "No response received.");
             logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
         }
+        logger.wrapper.log(Level.WARNING, "No response received after {0} milliseconds.",
+                           CONFIGURATION.getSyncResponseTimeout());
         return null;
     }
 

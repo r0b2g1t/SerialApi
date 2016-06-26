@@ -34,7 +34,7 @@ public class MessageReceiver implements Runnable {
                 e.printStackTrace();
             }
             if(!this.responseAll.getText().equals(this.responseCache.getText())){
-                System.out.println("Response received: " + responseAll.getText());
+                System.out.println("Response received in MessageReceiver: " + responseAll.getText());
                 responseCache.setText(responseAll.getText());
             }
         }

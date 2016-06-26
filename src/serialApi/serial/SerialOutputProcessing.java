@@ -17,6 +17,8 @@ public class SerialOutputProcessing implements Runnable{
 
     private static LoggerCollector logger;
 
+    private boolean running = true;
+
     private final LinkedBlockingQueue<SerialProtocol> SERIAL_OUTPUT_QUEUE;
     private final OutputStream SERIAL_OUT;
     private final SerialProtocol transferElement;
@@ -47,7 +49,7 @@ public class SerialOutputProcessing implements Runnable{
         } catch (Exception e){
             logger.wrapper.log(Level.WARNING, "Can not set SerialOutputProcessing thread set to sleep for initialisation.");
         }
-        while( true )
+        while( running )
         {
             SerialProtocol request;
             if(sendSignal.get() == 0) {
@@ -81,6 +83,6 @@ public class SerialOutputProcessing implements Runnable{
     }
     public void terminate(){
         logger.wrapper.log(Level.FINE, "SerialOutputProcessing thread will be terminating.");
-        Thread.currentThread().interrupt();
+        running = false;
     }
 }

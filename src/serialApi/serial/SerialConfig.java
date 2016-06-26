@@ -98,6 +98,14 @@ public class SerialConfig{
     }
 
     /**
+     * @return Integer          The milliseconds to wait for response of a synchronous request.
+     */
+    public Integer getSyncResponseTimeout()
+    {
+        return Integer.parseInt( config.getProperty("SYNC_RESPONSE_TIMEOUT"));
+    }
+
+    /**
      * @return String           The path to the logfile.
      */
     public String getLogPath(){
@@ -236,5 +244,13 @@ public class SerialConfig{
      */
     public void addResponsePattern(String responsePattern){
         responsePatternList.add(Pattern.compile(responsePattern));
+    }
+
+    /**
+     * @param syncResponseTimeout  Sets the Milliseconds to wait for a response of a synchronous request.
+     */
+    public void setSyncResponseTimeout(Integer syncResponseTimeout)
+    {
+        config.setProperty("SYNC_RESPONSE_TIMEOUT", syncResponseTimeout.toString());
     }
 }

@@ -1,5 +1,6 @@
 package serialApi.demo;
 
+import serialApi.exceptions.NoSyncResponseException;
 import serialApi.serial.SerialManager;
 
 /**
@@ -15,6 +16,11 @@ public class SyncWriter implements Runnable {
 
     @Override
     public void run(){
-        System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("1"));
+        try {
+            System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("1"));
+        }catch (NoSyncResponseException e){
+            e.printStackTrace();
+        }
+
     }
 }

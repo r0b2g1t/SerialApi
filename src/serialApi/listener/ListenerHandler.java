@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 /**
@@ -18,22 +19,24 @@ public class ListenerHandler implements Runnable {
 
     private static LoggerCollector logger;
 
-    private final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap;
+    private final LinkedBlockingQueue<SerialProtocol> serialInputQueue;
+
     private final ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseSyncQueueMap;
     private final ConcurrentHashMap<Long, ArrayList<ResponseListener>> responderListenerListMap;
 
     private final Message responseMessage;
 
     /**
-     * @param responseQueueMap          ConcurrentHasMap witch holds the response queues of the threads
-     * @param responseSyncQueueMap      ConcurrentHasMap witch holds the response queues of the synchronous requests
-     * @param responderListenerListMap  ConcurrentHashMap witch holds the registrated listeners
+     * @param serialInputQueue          response queue for response transmission from SerialReader to ListenerHandler.
+     * @param responseSyncQueueMap      ConcurrentHasMap witch holds the response queues of the synchronous requests.
+     * @param responderListenerListMap  ConcurrentHashMap witch holds the registrated listeners.
      */
-    public ListenerHandler(ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseQueueMap,
+    public ListenerHandler(LinkedBlockingQueue<SerialProtocol> serialInputQueue,
                            ConcurrentHashMap<Long, BlockingQueue<SerialProtocol>> responseSyncQueueMap,
                            ConcurrentHashMap<Long, ArrayList<ResponseListener>> responderListenerListMap) {
 
-        this.responseQueueMap = responseQueueMap;
+        this.serialInputQueue = serialInputQueue;
+
         this.responseSyncQueueMap = responseSyncQueueMap;
         this.responderListenerListMap = responderListenerListMap;
         this.responseMessage = new Message("");
@@ -44,17 +47,15 @@ public class ListenerHandler implements Runnable {
     @Override
     public void run(){
         while(true){
-            for(Long key :  responseQueueMap.keySet()) {
                 SerialProtocol response = null;
                 try {
                     ArrayList listeners;
+                    response = serialInputQueue.take();
 
-                    if(!responseQueueMap.get(key).isEmpty()){
-                        response = responseQueueMap.get(key).take();
                         logger.wrapper.log(Level.FINEST, "Response {0} taken from queue.", response.getAll());
 
                         if(response.getSyncFlag().equals(true)) {
-                            responseSyncQueueMap.get(key).add(response);
+                            responseSyncQueueMap.get(response.getThreadID()).add(response);
                         }
                         if(responderListenerListMap.get(response.getThreadID()) != null) {
                             listeners = responderListenerListMap.get(response.getThreadID());
@@ -79,22 +80,20 @@ public class ListenerHandler implements Runnable {
                             Iterator iAll = listeners.iterator();
 
                             // triggers all listeners witch are registrated
-                            // for response-events for the thread with threadID
+                            // for all responses
                             while (iAll.hasNext()) {
                                 responseMessage.setText(response.getAll());
                                 ((EventClassListener) iAll.next()).responseArrived(responseMessage);
                             }
                         }
-                    }
-                } catch (InterruptedException e){
-                    logger.wrapper.log(Level.WARNING,
-                            "ListenerHandler can't take response from responseQueue for thread {0}.", key);
-                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+
                 } catch (NoListenerException e) {
                     logger.wrapper.log(Level.WARNING, "No listener found for thread {0}.", response.getThreadID());
                     logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
+                } catch (InterruptedException e) {
+                    logger.wrapper.log(Level.WARNING, "SerialInputQueue take-operation was interrupted.");
+                    logger.wrapper.log(Level.FINE, "Stacktrace: ", e);
                 }
-            }
         }
     }
 }

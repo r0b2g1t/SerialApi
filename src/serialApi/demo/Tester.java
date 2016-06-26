@@ -1,5 +1,6 @@
 package serialApi.demo;
 
+import serialApi.exceptions.NoSyncResponseException;
 import serialApi.serial.SerialConfig;
 import serialApi.serial.SerialManager;
 
@@ -18,7 +19,7 @@ public class Tester {
         BlockingQueue<String> inputQueue = new LinkedBlockingQueue<>();
 
         // set path to the properties file
-        String file = "/Users/robert/IdeaProjects/SerialApi/src/serialApi/serial/serial.properties";
+        String file = "/Users/robert/IdeaProjects/SerialApi/src/resources/serial.properties";
 
         SerialConfig CONFIGURATION = new SerialConfig(file);
 
@@ -27,7 +28,11 @@ public class Tester {
 
         SerialMgm = new SerialManager(CONFIGURATION);
 
-        SerialMgm.init();
+        try {
+            SerialMgm.init();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
         // add data to the WriterThreads via inputQueues for asynchronous writing
         inputQueue.add("1");
@@ -53,8 +58,11 @@ public class Tester {
 
         syncWriterThread.start();
 
-        //System.out.println("Write sync:");
-        System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("0"));
+        try {
+            System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("0"));
+        }catch (NoSyncResponseException e){
+            e.printStackTrace();
+        }
 
         /*try{
             SerialMgm.close();
