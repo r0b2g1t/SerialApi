@@ -61,6 +61,7 @@ public class SerialManager {
 
     /**
      * Initial the connection to the serial device by using the rxtx-library.
+     * @throws UnableToConnectException Throws Exceptions if necessary.
      */
     public void init() throws Exception{
         try {
@@ -98,8 +99,9 @@ public class SerialManager {
     }
 
     /**
-     * @param data  Input data for the serial write method.
-     * @return      the response of the synchronous request.
+     * @param data                          Input data for the serial write method.
+     * @throws NoSyncResponseException      Throws Exceptions if necessary.
+     * @return                              the response of the synchronous request.
      */
     public String syncWrite(final String data) throws NoSyncResponseException {
         String response;
