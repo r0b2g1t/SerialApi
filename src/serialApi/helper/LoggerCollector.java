@@ -27,6 +27,7 @@ public class LoggerCollector {
     public final Logger wrapper = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private SerialConfig CONFIGURATION;
 
+    // für singleton private  zum schutz
     public LoggerCollector(){
         CONFIGURATION = null;
     }

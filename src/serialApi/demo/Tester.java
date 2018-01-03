@@ -34,7 +34,7 @@ public class Tester {
         // add data to the WriterThreads via inputQueues for asynchronous writing
         inputQueue.add("1");
         inputQueue.add("0");
-        inputQueue.add("1");
+        //inputQueue.add("1");
         /*inputQueue.add("0");
         /*inputQueue.add("1");
         inputQueue.add("0");*/
@@ -55,7 +55,7 @@ public class Tester {
 
         syncWriterThread.start();
 
-        try {
+        /*try {
             System.out.println("SyncWrite answer: " + SerialMgm.syncWrite("0"));
         }catch (NoSyncResponseException e){
             e.printStackTrace();
